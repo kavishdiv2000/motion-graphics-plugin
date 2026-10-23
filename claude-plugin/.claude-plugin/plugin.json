@@ -1,0 +1,8 @@
+{
+  "name": "motion-graphics",
+  "version": "1.0.0",
+  "description": "Generate professional motion-graphics videos for social media from DESIGN.md + CHOREOGRAPHY.md + CONTENT.md: interviews, validation, contact-sheet review, deterministic Remotion render with beat-locked synthesised audio, QA, and scheduled batch production.",
+  "author": { "name": "Kavish Nanayakkara", "email": "dikavish62@gmail.com" },
+  "license": "MIT",
+  "keywords": ["motion-graphics", "video", "remotion", "kinetic-typography", "social-media", "sound-design", "marketing", "automation"]
+}

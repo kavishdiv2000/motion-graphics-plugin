@@ -1,0 +1,7 @@
+node_modules/
+jobs/*/out/
+jobs/*/stills/
+jobs/*/contact-*.png
+public/jobs/
+public/sfx/
+.remotion/

@@ -1,0 +1,14 @@
+node_modules/
+**/assets/engine/jobs/*/out/
+**/assets/engine/jobs/*/stills/
+**/assets/engine/jobs/*/contact-*.png
+**/assets/engine/jobs/*/spec.*.json
+**/assets/engine/jobs/*/report.*.md
+**/assets/engine/jobs/*/cues.*.json
+**/assets/engine/jobs/*/qa.*.json
+**/assets/engine/public/jobs/
+**/assets/engine/public/sfx/*.wav
+**/assets/engine/public/sfx/INDEX.md
+.DS_Store
+mgp.tgz
+motion-graphics-claude-plugin.zip
