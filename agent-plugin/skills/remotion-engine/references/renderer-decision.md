@@ -50,7 +50,7 @@ This takes about a day of engineering; Remotion makes that unnecessary unless th
 - **Procedural synthesis in Node (chosen)**: zero dependencies, deterministic, royalty-free, beat-locked to the timeline,
   and sounds are versioned as code. The trade-off is that it's less "produced" than a top library, which the presets mitigate.
 - **Licensed SFX libraries** (Soundly, Splice, Epidemic Sound, Artlist): richer and fast, but licence per use and they
-  need a file-mapping layer. Supported: drop WAVs in `public/sfx/custom/` and add ids (see the sound-design skill).
+  need a file-mapping layer. Supported: drop WAVs in `.motion-graphics/assets/sfx/` and use their file names as ids (see the sound-design skill).
 - **AI SFX** (e.g. ElevenLabs Sound Effects, Stable Audio): fine for one-off hero sounds. Generate once, save as WAV,
   version it. Never generate at render time (that breaks determinism and costs per render).
 - **AI music** (e.g. Suno/Udio/Stable Audio): check commercial terms; render once to a WAV bed and use `music.source: file`.

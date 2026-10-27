@@ -3,7 +3,7 @@ name: sound-design
 description: Sound design for motion graphics — the 50-sound procedural SFX library (clicks, ticks, keys, glitches, whooshes, risers, impacts, stingers, room tones), music-bed presets, mapping animation events to sounds, beat-sync, ducking, loudness mastering (-14 LUFS), recreating a reference video's audio, and adding licensed or AI-generated sounds. Use when choosing, generating, mixing or debugging audio for a motion-graphics video.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Sound design for motion graphics
@@ -14,7 +14,7 @@ so every word, decode, land and cut has a sound on the exact frame, and the resu
 
 - Full catalogue with the synthesis code of every sound: `references/sfx-catalogue.md`
 - Reverse-engineering a reference video's audio (worked on the demo reel): `references/recreate-reference-audio.md`
-- Audition: `npm run sfx` → `public/sfx/_reel.wav` and `public/sfx/INDEX.md`
+- Audition: `node .motion-graphics/mg.mjs sfx` → `.motion-graphics/assets/sfx-library/_reel.wav` and `INDEX.md`
 
 ## 1. The layers of a social motion-graphics mix
 | Layer | Level (relative) | Role |
@@ -66,7 +66,7 @@ gating (`chop`), Karplus-Strong `pluck`, `echo` and `reverb`.
 - **Beds / texture (3)**: brown-noise room tone (LP 500 Hz), pink-noise tape hiss (BP 6 kHz), CRT hum (50/100/150 Hz + 15.7 kHz).
 
 To add a sound: add an entry to `SFX` in `scripts/lib/sfx.mjs` (`cat, desc, use, make: (sr) => Float32Array | [L,R]`),
-use only seeded noise, normalise the peak (−1 to −6 dB), `npm run sfx -- --only my_id`, listen, then regenerate the
+use only seeded noise, normalise the peak (−1 to −6 dB), `node scripts/sfx-library.mjs --only my_id` (in the plugin's engine source), listen, then regenerate the
 catalogue: `node scripts/sfx-docs.mjs <skill>/references/sfx-catalogue.md`.
 
 ## 4. Music beds (`audio.music.preset`)
@@ -78,7 +78,7 @@ catalogue: `node scripts/sfx-docs.mjs <skill>/references/sfx-catalogue.md`.
 | `dark_tension` | low drone, heartbeat pulse, noise swells into each cut | 80–95 | problem/agitate hooks, warnings |
 Chord progression per scale: minor i–VI–III–VII, major I–V–vi–IV, every 2 bars. **Energy** per scene (choreography
 `music.energy_curve`) thins or thickens the arp and enables ticks (> 0.6) and the kick (> 0.75).
-Licensed track instead: `music.source: file` with a 16-bit 48 kHz WAV in `public/audio/` (loops if shorter).
+Licensed track instead: `music.source: file` with a 16-bit 48 kHz WAV in `.motion-graphics/assets/audio/` and `file: assets/audio/<name>.wav` (loops if shorter).
 
 ## 5. Mixing rules
 1. One hero hit per scene. If two land within 300 ms, keep the bigger one.
@@ -86,7 +86,7 @@ Licensed track instead: `music.source: file` with a 16-bit 48 kHz WAV in `public
 3. Throttle repeats: word_in ≥ 3 frames apart, type_char ≥ 2, count_tick ≥ 3. Humanise ±1.5 dB.
 4. Low end belongs to one thing at a time: the sub hit *or* the drone. Ducking clears room for the hit; if you add a licensed bed, high-pass it around 40 Hz.
 5. Leave the final 2 s for the stinger tail and the music fade-out.
-6. Deliver at 48 kHz, AAC 320 kbps, −14 LUFS, ≤ −1 dBTP. `npm run qa` verifies this.
+6. Deliver at 48 kHz, AAC 320 kbps, −14 LUFS, ≤ −1 dBTP. `mg qa` verifies this.
 
 ## 6. Silence and restraint
 Platforms autoplay muted, so the video must work silent. The sound is the reward for unmuting, not a crutch.
@@ -94,5 +94,5 @@ Calm brands: set `word_in: null`, use `thud_soft` for lands, `warm_keys` bed. Le
 the payoff to make the payoff hit harder.
 
 ## 7. AI and licensed sounds (optional)
-Generate or buy a sound **once**, save it as `public/sfx/custom/<id>.wav` (16-bit, 48 kHz), and reference `<id>` like a
-built-in. Never call a generation API at render time. Record the source and licence in `public/sfx/custom/LICENSES.md`.
+Generate or buy a sound **once**, save it as `.motion-graphics/assets/sfx/<id>.wav` (16-bit, 48 kHz), and reference `<id>` like a
+built-in. Never call a generation API at render time. Record the source and licence in `.motion-graphics/assets/sfx/LICENSES.md`.

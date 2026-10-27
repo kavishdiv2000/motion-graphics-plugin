@@ -3,7 +3,7 @@ name: content-md
 description: Collect, normalise and validate CONTENT.md, the per-video copy for the motion-graphics pipeline (audience, core message, beats with on-screen text, claims, CTA, post copy). Use when the user uploads content, pastes a script/post/notes to turn into a motion-graphics video, or when content is missing and must be requested.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   schema: motion-content/1.0
 ---
 
@@ -13,7 +13,7 @@ Template: `references/CONTENT.template.md`. Full example (the reference reel's c
 Copy rules: `references/copywriting.md`.
 
 ## Intake: three cases
-1. **A CONTENT.md was uploaded.** Copy it to `jobs/<id>/CONTENT.md` and check the beats (see the checklist below).
+1. **A CONTENT.md was uploaded.** Write it to the session (`.motion-graphics/sessions/<id>/CONTENT.md`; in chat mode keep it in the conversation) and check the beats (see the checklist below).
 2. **Free text was given** (a LinkedIn post, notes, a voice-memo transcript, a blog intro). Normalise it (next section),
    write the file, and **show the beats as a table** (label · setup · HEADLINE · tail) for approval.
 3. **Nothing was given.** Ask for it, and show this mini-example so they know the shape:

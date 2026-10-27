@@ -1,12 +1,13 @@
 ---
 # ============================================================================
 # CONTENT.md TEMPLATE — motion-content/1.0
-# DYNAMIC: one per video. WHAT we say. The user may supply this file, paste
+# DYNAMIC: one per video, saved at .motion-graphics/sessions/<id>/CONTENT.md (or kept in the chat in chat mode).
+# WHAT we say. The user may supply this file, paste
 # free text, or answer questions; the agent always normalises it into beats.
 #   # ASK: question for the user if the field is missing
 # ============================================================================
 schema: motion-content/1.0
-id: my-video
+id: my-video                          # set automatically to the session id by `mg session new`
 campaign: null                        # ASK (optional): Campaign / series name?
 audience: null                        # ASK: Who is this for? (role + situation, e.g. "agency owners stuck doing delivery")
 pain: null                            # ASK: What problem or tension do they feel?

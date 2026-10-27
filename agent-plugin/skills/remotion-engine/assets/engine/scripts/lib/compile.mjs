@@ -7,7 +7,12 @@ import { TEMPLATES, TEMPLATE_NAMES } from '../../src/lib/templates.js';
 import { buildTimeline, sceneElements, DEFAULT_MOTION } from '../../src/lib/timeline.js';
 import { unitFor, resolveSize, contentBox, contrast } from '../../src/lib/layout.js';
 
-const METRICS = JSON.parse(readFileSync(new URL('../../src/lib/font-metrics.json', import.meta.url), 'utf8'));
+const BUILTIN_METRICS = JSON.parse(readFileSync(new URL('../../src/lib/font-metrics.json', import.meta.url), 'utf8'));
+/** Built-in metrics + the workspace's custom font metrics (.motion-graphics/assets/fonts/metrics.json, written by `mg font add`). */
+function loadMetrics(baseDir) {
+  const f = baseDir && join(baseDir, 'assets', 'fonts', 'metrics.json');
+  return f && existsSync(f) ? { ...BUILTIN_METRICS, ...JSON.parse(readFileSync(f, 'utf8')) } : BUILTIN_METRICS;
+}
 import { allSfxIds } from './sfx.mjs';
 
 const BEAT_SLOTS = ['label', 'setup', 'headline', 'tail', 'lines', 'items', 'value', 'before', 'after', 'cta', 'logo', 'parts', 'prefix', 'suffix'];
@@ -33,7 +38,9 @@ function applyCase(text, kase) {
 }
 
 /** Resolve DESIGN.md tokens for one output format. */
-export function resolveDesign(design, formatName, issues, publicDir) {
+// `baseDir` = the .motion-graphics/ folder: every asset path in DESIGN.md (logo, fonts, music) is relative to it.
+export function resolveDesign(design, formatName, issues, baseDir) {
+  const METRICS = loadMetrics(baseDir);
   const fmt = design.canvas?.formats?.[formatName];
   if (!fmt) throw new Error(`Format "${formatName}" not defined in DESIGN.md canvas.formats (have: ${Object.keys(design.canvas?.formats || {}).join(', ')})`);
   const colors = {};
@@ -44,7 +51,7 @@ export function resolveDesign(design, formatName, issues, publicDir) {
     const fam = fams[r.family] || {};
     const famName = fam.family || r.family;
     const met = METRICS[`${famName}|${r.weight || 400}`] || METRICS[`${famName}|400`];
-    if (!met) issue(issues, 'warn', 'font.metrics', `No glyph metrics for ${famName} ${r.weight || 400} — fitting falls back to avg_char_width_em`, { where: `typography.roles.${name}` }, 'Run: node scripts/font-metrics.mjs');
+    if (!met) issue(issues, 'warn', 'font.metrics', `No glyph metrics for ${famName} ${r.weight || 400} — fitting falls back to avg_char_width_em`, { where: `typography.roles.${name}` }, 'Register the font: node .motion-graphics/mg.mjs font add <file> "<Family>" <weight>');
     roles[name] = {
       ...r,
       family_name: famName,
@@ -57,7 +64,15 @@ export function resolveDesign(design, formatName, issues, publicDir) {
     };
   }
   const logoPath = design.brand?.logo?.primary;
-  const logoExists = logoPath && publicDir && existsSync(join(publicDir, logoPath));
+  const logoExists = logoPath && baseDir && existsSync(join(baseDir, logoPath));
+  if (logoPath && !logoExists) issue(issues, 'info', 'brand.logo', `Logo ${logoPath} not found in .motion-graphics/ — the end card uses the wordmark "${design.brand?.logo?.wordmark_fallback || design.brand?.name}"`, {}, 'Put the logo at .motion-graphics/' + logoPath);
+  // custom font files shipped with the workspace (typography.families.<x>.file: assets/fonts/X.woff2)
+  const fontFaces = [];
+  for (const [key, fam] of Object.entries(fams)) {
+    if (!fam.file) continue;
+    if (!baseDir || !existsSync(join(baseDir, fam.file))) { issue(issues, 'error', 'font.file', `typography.families.${key}.file "${fam.file}" not found in .motion-graphics/`); continue; }
+    for (const w of fam.weights || [400]) fontFaces.push({ family: fam.family, weight: w, src: fam.file });
+  }
   const mt = design.motion || {};
   return {
     id: design.id,
@@ -74,6 +89,7 @@ export function resolveDesign(design, formatName, issues, publicDir) {
     brand: { name: design.brand?.name, url: design.brand?.url, wordmark: design.brand?.logo?.wordmark_fallback || design.brand?.name, logo: logoExists ? logoPath : null },
     colors,
     roles,
+    fontFaces,
     texture: design.texture || {},
     motion: {
       timing: { ...DEFAULT_MOTION, ...(mt.timing || {}) },
@@ -93,7 +109,7 @@ export function resolveDesign(design, formatName, issues, publicDir) {
  * Compile.
  * @returns {{spec: object, issues: object[], cues: object[]}}
  */
-export function compile({ design, choreo, content, publicDir, formatOverride, jobId }) {
+export function compile({ design, choreo, content, baseDir, formatOverride, jobId }) {
   const issues = [];
   const D = design.frontmatter;
   const C = choreo.frontmatter;
@@ -103,7 +119,7 @@ export function compile({ design, choreo, content, publicDir, formatOverride, jo
   if (!T.schema?.startsWith('motion-content/')) issue(issues, 'warn', 'schema.content', 'CONTENT.md front matter has no `schema: motion-content/1.x`');
 
   const formatName = formatOverride || C.format || D.canvas?.default_format || 'vertical';
-  const R = resolveDesign(D, formatName, issues, publicDir);
+  const R = resolveDesign(D, formatName, issues, baseDir);
   const fps = R.fps;
   const bpm = C.music?.bpm ?? D.audio?.music?.bpm ?? 100;
   const beatFrames = (fps * 60) / bpm;

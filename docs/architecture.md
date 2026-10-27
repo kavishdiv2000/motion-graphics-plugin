@@ -26,7 +26,8 @@ brand / site / video ─► DESIGN.md (once) ───────────�
 | layout maths, text fitting, timing, SFX placement, loudness | engine | must be exact and repeatable; models are bad at this |
 | catching mistakes | both | the validator (objective) plus contact-sheet critique (subjective) |
 
-A model never writes animation code for a normal video. It writes about 60–120 lines of markdown. That's why
+A model never writes animation code for a normal video. It writes about 60–120 lines of markdown into a session folder
+(or, in chat mode, into the conversation). That's why
 mid-tier models succeed: the space of possible outputs is small, and every output is checked.
 
 ## Agent roles (single agent by default, multi-agent when it pays)
@@ -52,17 +53,21 @@ seeded PRNG only, bundled fonts, the frame as the only clock, sizes taken from t
 
 ## Files
 ```
-motion-studio/                       (copied from …/remotion-engine/assets/engine)
-├─ brand/DESIGN.md                   static brand system
-├─ jobs/<id>/CHOREOGRAPHY.md|CONTENT.md   inputs
-│   ├─ spec.<fmt>.json  report.<fmt>.md  cues.<fmt>.json  qa.<fmt>.json  contact-<fmt>.png
-│   └─ out/<id>-<fmt>.mp4
-├─ queue/                            batch inbox (Claude plugin)
-├─ public/brand · public/audio · public/sfx/custom   brand assets, licensed beds, custom SFX
-├─ src/lib/{templates,timeline,layout,prng}.js       shared pure logic
-├─ src/{Root,Video,ContactSheet}.tsx, scenes/Scene.tsx, components/{Reveals,Texture}.tsx
-└─ scripts/{build,stills,render,qa,make,new-job,sfx-library,font-metrics,sfx-docs}.mjs + lib/
+<workspace>/.motion-graphics/        created by skills/motion-graphics/scripts/init-workspace.mjs, managed by mg.mjs
+├─ DESIGN.md                          static brand system (one per workspace)
+├─ assets/ {logo.svg, fonts/, audio/, sfx/}   brand files referenced from DESIGN.md
+├─ sessions/<id>/                     one per video
+│   ├─ session.json  CONTENT.md  CHOREOGRAPHY.md
+│   ├─ build/  spec.<fmt>.json · report.<fmt>.md · cues.<fmt>.json · mix.<fmt>.wav · contact-<fmt>.png · qa.<fmt>.json
+│   └─ output/ <id>-<fmt>.mp4 · thumb-<fmt>.png · POST.md
+├─ inbox/                             batch drops → queued sessions
+├─ mg.mjs                             launcher → .engine/scripts/mg.mjs
+└─ .engine/                           copy of …/remotion-engine/assets/engine + node_modules
+    ├─ scripts/mg.mjs · lib/{workspace,pipeline,compile,mix,music,sfx,dsp,md}.mjs
+    ├─ src/{Root,Video,ContactSheet}.tsx · scenes/Scene.tsx · components/{Reveals,Texture}.tsx · lib/{templates,timeline,layout,prng}.js
+    └─ .stage/<session>/               per-render public dir (assets + mixes) — Remotion never sees the whole workspace
 ```
+The plugin folders are read-only at runtime: nothing is ever written inside them.
 
 ## Two plugins, one source
 `agent-plugin/skills/` is canonical. `scripts/sync-plugins.mjs` mirrors it into `claude-plugin/skills/` (excluding

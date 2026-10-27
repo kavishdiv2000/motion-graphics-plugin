@@ -1,6 +1,6 @@
 ---
 name: setup-design
-description: Create or replace the brand's static DESIGN.md for the motion-graphics pipeline — by interview, from a website, from a brand guide, or from a reference video — and preview it on the demo job. Invoke as /motion-graphics:setup-design [url-or-file].
+description: Create or replace the workspace's static .motion-graphics/DESIGN.md for the motion-graphics pipeline — by interview, from a website, from a brand guide, or from a reference video — and preview it on a design-preview session. Invoke as /motion-graphics:setup-design [url-or-file].
 argument-hint: "[brand website URL | reference video | existing DESIGN.md]"
 ---
 
@@ -8,15 +8,18 @@ argument-hint: "[brand website URL | reference video | existing DESIGN.md]"
 
 Source given: `$ARGUMENTS`
 
-1. Make sure the workspace exists (motion-graphics skill, step 0). The engine is at
-   `${CLAUDE_PLUGIN_ROOT}/skills/remotion-engine/assets/engine`.
+1. Make sure `.motion-graphics/` exists in `${CLAUDE_PROJECT_DIR}` (otherwise run
+   `node "${CLAUDE_PLUGIN_ROOT}/skills/motion-graphics/scripts/init-workspace.mjs" "${CLAUDE_PROJECT_DIR}"`).
 2. Follow the **design-md** skill (`${CLAUDE_PLUGIN_ROOT}/skills/design-md/SKILL.md`):
-   - a `.md` file → path A (adopt + validate)
+   - a `.md` file → path A (adopt: copy to `.motion-graphics/DESIGN.md`, then `mg design validate`)
    - a URL → path C (website extraction; use a browser tool if available, otherwise WebFetch for copy and ask for colours/fonts)
-   - a video file → path C (reference video extraction; the guide has the ffmpeg/python commands)
+   - a video file → path C (reference video extraction with the guide's ffmpeg/python commands)
    - nothing → path B (interview with AskUserQuestion, ≤ 4 questions per call)
-3. If `brand/DESIGN.md` already exists and is not the shipped example ("Signal Ops"), show a diff summary and ask before overwriting.
-   Keep the old one as `brand/DESIGN.<old-version>.md`.
-4. Build the demo job with the new design and the matching format, render the contact sheet, **look at it**,
-   and show it to the user together with a summary card (palette, fonts, motion personality, scene length, music preset/BPM).
-5. Iterate until the user approves. Then bump `version`/`updated`, and note any `substitute_for` fonts that need licensing.
+   Start the file with `node .motion-graphics/mg.mjs design new --template` (or `--example`), then edit it.
+3. If `.motion-graphics/DESIGN.md` already exists, summarise how the new one differs and ask before replacing it.
+   Use `design new --force`, which keeps `DESIGN.<timestamp>.md`.
+4. Logo, font and music files go in `.motion-graphics/assets/` (fonts: `mg font add <file> "<Family>" <weight>`).
+5. Preview: `node .motion-graphics/mg.mjs session new "design preview" --example --client claude-code --chat-ref ${CLAUDE_SESSION_ID}`,
+   then `mg stills <that session>`. Read the contact sheet, then show it with a summary card (palette, fonts, motion personality,
+   scene length, music preset and BPM).
+6. Iterate until the user approves, then bump `version` and `updated`. Note any `substitute_for` fonts that need licensing.

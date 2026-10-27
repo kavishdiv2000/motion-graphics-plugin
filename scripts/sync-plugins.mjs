@@ -15,7 +15,7 @@ const DST = join(ROOT, 'claude-plugin/skills');
 const ENGINE = join(SRC, 'remotion-engine/assets/engine');
 const CLAUDE_ONLY = new Set(['make-video', 'setup-design', 'batch-videos']);
 // generated / heavy paths never shipped in a plugin
-const EXCLUDE = [/node_modules/, /[\\/]out[\\/]/, /[\\/]stills[\\/]/, /contact-[a-z]+\.png$/, /[\\/]public[\\/]jobs/, /[\\/]public[\\/]sfx[\\/][^\\/]+\.(wav|md)$/, /[\\/]jobs[\\/](?!demo(?:[\\/]|$))[^\\/]+/, /(spec|report|cues|qa)\.[a-z]+\.(json|md)$/, /\.remotion/];
+const EXCLUDE = [/node_modules/, /[\\/]\.stage([\\/]|$)/, /[\\/]sfx-library([\\/]|$)/, /[\\/]\.motion-graphics([\\/]|$)/];
 const keep = (p) => !EXCLUDE.some((rx) => rx.test(p));
 
 function listFiles(dir) {
@@ -41,16 +41,13 @@ if (process.argv.includes('--check')) {
   process.exit(diff ? 1 : 0);
 }
 
-// 1. refresh engine templates + examples from the skill references (the references are canonical)
-const refs = (s, f) => join(SRC, s, 'references', f);
-mkdirSync(join(ENGINE, 'templates'), { recursive: true });
-copyFileSync(refs('design-md', 'DESIGN.template.md'), join(ENGINE, 'templates/DESIGN.template.md'));
-copyFileSync(refs('choreography-md', 'CHOREOGRAPHY.template.md'), join(ENGINE, 'templates/CHOREOGRAPHY.template.md'));
-copyFileSync(refs('content-md', 'CONTENT.template.md'), join(ENGINE, 'templates/CONTENT.template.md'));
-copyFileSync(refs('design-md', 'DESIGN.example.md'), join(ENGINE, 'brand/DESIGN.md'));
-mkdirSync(join(ENGINE, 'jobs/demo'), { recursive: true });
-copyFileSync(refs('choreography-md', 'CHOREOGRAPHY.example.md'), join(ENGINE, 'jobs/demo/CHOREOGRAPHY.md'));
-copyFileSync(refs('content-md', 'CONTENT.example.md'), join(ENGINE, 'jobs/demo/CONTENT.md'));
+// 1. refresh the engine's templates + examples from the skill references (the references are canonical)
+const refs = (sk, f) => join(SRC, sk, 'references', f);
+mkdirSync(join(ENGINE, 'templates', 'examples'), { recursive: true });
+for (const [sk, f] of [['design-md', 'DESIGN'], ['choreography-md', 'CHOREOGRAPHY'], ['content-md', 'CONTENT']]) {
+  copyFileSync(refs(sk, `${f}.template.md`), join(ENGINE, 'templates', `${f}.template.md`));
+  copyFileSync(refs(sk, `${f}.example.md`), join(ENGINE, 'templates', 'examples', `${f}.example.md`));
+}
 
 // 2. regenerate the SFX catalogue from code (needs no npm install: sfx code is dependency-free)
 spawnSync(process.execPath, [join(ENGINE, 'scripts/sfx-docs.mjs'), join(SRC, 'sound-design/references/sfx-catalogue.md')], { stdio: 'inherit' });

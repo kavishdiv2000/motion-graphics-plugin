@@ -1,13 +1,18 @@
 {
   "name": "motion-graphics-plugins",
-  "owner": { "name": "Kavish Nanayakkara", "email": "dikavish62@gmail.com" },
-  "metadata": { "description": "Motion-graphics production pipeline for social media." },
+  "owner": {
+    "name": "Kavish Nanayakkara",
+    "email": "dikavish62@gmail.com"
+  },
+  "metadata": {
+    "description": "Motion-graphics production pipeline for social media."
+  },
   "plugins": [
     {
       "name": "motion-graphics",
       "source": "./claude-plugin",
       "description": "Generate professional motion-graphics videos from DESIGN.md + CHOREOGRAPHY.md + CONTENT.md, with scheduled batch production.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "category": "productivity"
     }
   ]

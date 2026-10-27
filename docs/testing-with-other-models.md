@@ -3,10 +3,10 @@
 Goal: show that a non-Opus model, following these skills, produces videos as good as Opus does.
 
 ## Protocol
-1. **Same inputs for every model.** Use `jobs/demo` (the full reference reel) and two fresh briefs:
+1. **Same inputs for every model.** Use the demo session (`mg demo`, the full reference reel) and two fresh briefs:
    - *Free-text brief*: "Make a 20 s reel from: 'Most agencies lose 30% of margin to handoffs. Automate the handoffs, not the people. Book an audit: example.com/audit'" (note: the 30% statistic has no source, and a good run flags it).
    - *Structured brief*: a CONTENT.md with 6 beats and no choreography.
-2. **Same plugin and same design**: `brand/DESIGN.md` = Signal Ops; fresh `motion-studio/` per model.
+2. **Same plugin and same design**: `.motion-graphics/DESIGN.md` = Signal Ops (`mg design new --example`); a fresh workspace per model. Also run each model once in **chat mode** and score the three files it hands over.
 3. **Run unattended or with scripted answers** (format vertical, 20 s, awareness, steady) so the runs are comparable.
 4. **Collect** for each run: the CONTENT.md and CHOREOGRAPHY.md written, `report.md`, the contact sheet, the MP4, `qa.json`,
    the number of tool calls, and the tokens used.

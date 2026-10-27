@@ -1,6 +1,6 @@
 // Procedural SFX library — 50 deterministic, royalty-free sounds synthesised from code.
 // Each entry documents WHAT it is, WHEN to use it, and HOW it is built (the recipe is the code).
-// Render the whole library to WAV files with:  npm run sfx   (writes public/sfx/*.wav + sfx-index.md)
+// Render the whole library to WAV files with:  node .motion-graphics/mg.mjs sfx   (→ .motion-graphics/assets/sfx-library/)
 import {
   osc, fm, noise, envExp, envADSR, fade, applyCurve, biquad, lp, hp, bp, drive, bitcrush, chop, pluck,
   echo, reverb, sum, scale, normalize, reverse, mtof, buf, mixInto, widen,
@@ -11,8 +11,10 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readWav } from './dsp.mjs';
 
-// Custom/licensed sounds: drop 16-bit 48 kHz WAVs into public/sfx/custom/<id>.wav and use <id> like any built-in.
-const CUSTOM_DIR = join(resolve(dirname(fileURLToPath(import.meta.url)), '../..'), 'public/sfx/custom');
+// Custom/licensed sounds: 16-bit 48 kHz WAVs in .motion-graphics/assets/sfx/<id>.wav are usable as <id> like any built-in.
+// The CLI points this at the workspace with setCustomSfxDir().
+let CUSTOM_DIR = join(resolve(dirname(fileURLToPath(import.meta.url)), '../..'), 'custom-sfx');
+export function setCustomSfxDir(dir) { CUSTOM_DIR = dir; }
 export function customSfxIds() {
   return existsSync(CUSTOM_DIR) ? readdirSync(CUSTOM_DIR).filter((f) => f.endsWith('.wav')).map((f) => f.slice(0, -4)) : [];
 }
@@ -159,7 +161,7 @@ export function renderSfx(id, sr) {
   if (def) out = def.make(sr);
   else if (existsSync(join(CUSTOM_DIR, `${id}.wav`))) {
     const w = readWav(readFileSync(join(CUSTOM_DIR, `${id}.wav`)));
-    if (w.sr !== sr) throw new Error(`public/sfx/custom/${id}.wav is ${w.sr} Hz; convert to ${sr} Hz`);
+    if (w.sr !== sr) throw new Error(`${id}.wav (custom SFX) is ${w.sr} Hz; convert to ${sr} Hz`);
     out = w.channels;
   } else throw new Error(`Unknown SFX id "${id}". Known: ${allSfxIds().join(', ')}`);
   if (!Array.isArray(out)) out = [out, out];

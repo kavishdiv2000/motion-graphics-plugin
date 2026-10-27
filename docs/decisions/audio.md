@@ -4,7 +4,7 @@
 | Option | Determinism | Cost | Quality | Sync | Licensing | Verdict |
 |---|---|---|---|---|---|---|
 | **Procedural synthesis in Node (chosen)** | ✔ exact | free | good; "designed", not "produced" | ✔ frame-exact from the shared timeline | none (our code) | default |
-| Licensed SFX/music libraries (Splice, Soundly, Epidemic, Artlist) | ✔ files | subscription | excellent | needs a mapping layer (supported via `public/sfx/custom/`, `music.source: file`) | per-licence terms | optional upgrade |
+| Licensed SFX/music libraries (Splice, Soundly, Epidemic, Artlist) | ✔ files | subscription | excellent | needs a mapping layer (supported via `.motion-graphics/assets/sfx/`, `music.source: file`) | per-licence terms | optional upgrade |
 | AI SFX (ElevenLabs Sound Effects, Stable Audio…) | ✘ per call (✔ if cached) | per generation | varies | same as files | check terms | generate **once**, save as WAV |
 | AI music (Suno, Udio, Stable Audio) | ✘ per call | per generation | good | tempo must be set/measured | check commercial terms | render once → `music.source: file` |
 | Remotion `<Audio>` per event | ✔ | free | same as the files used | ✔ | — | used only for the final mixed track (simpler, one mastering stage) |

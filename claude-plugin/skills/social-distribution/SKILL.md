@@ -3,7 +3,7 @@ name: social-distribution
 description: Platform specs, aspect-ratio variants, captions/post copy, thumbnails and funnel-objective mapping for motion-graphics videos on TikTok, Instagram Reels/Stories/Feed, YouTube Shorts/long-form, LinkedIn and X. Use when deciding formats and lengths for a motion-graphics video, writing the caption/first comment/hashtags, choosing CTAs by funnel stage, or packaging deliverables for publishing.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Social distribution
@@ -42,15 +42,15 @@ Codec for all: H.264 high, yuv420p, 30 fps, AAC 48 kHz, −14 LUFS (the engine's
 - No claims in the caption that aren't on screen or sourced.
 
 ## 4. Thumbnail / cover
-Use the landed frame of scene 1 or of the payoff scene (`npm run stills -- jobs/<id> --separate`, pick the `NN-land.png`).
+Use the landed frame of scene 1 or of the payoff scene (`mg make` already writes `output/thumb-<fmt>.png` = scene 1 landed; for another scene: `mg stills <id> --separate` → `build/stills/<fmt>/NN-land.png`).
 It must be readable at 150 px wide; if it isn't, shorten the hero.
 
 ## 5. Deliverable package
 ```
-jobs/<id>/out/<id>-vertical.mp4      (+ -square, -portrait, -horizontal as requested)
-jobs/<id>/contact-vertical.png       (review sheet)
-jobs/<id>/qa.vertical.json           (QA verdict)
-jobs/<id>/CONTENT.md → Post copy     (caption, first comment, hashtags)
+.motion-graphics/sessions/<id>/output/<id>-vertical.mp4   (+ -square, -portrait, -horizontal as requested)
+.motion-graphics/sessions/<id>/output/thumb-vertical.png    (cover / thumbnail)
+.motion-graphics/sessions/<id>/output/POST.md               (files, CTA, caption, first comment, hashtags, QA verdict)
+.motion-graphics/sessions/<id>/build/contact-vertical.png   (review sheet) · build/qa.vertical.json (QA)
 ```
 Never auto-publish. A human posts, because every video makes a claim on the brand's behalf.
 

@@ -12,7 +12,7 @@
 #     reference video — do not ask the user about them.
 #   • Colour values are hex strings. Sizes are px at a 1080 px reference (scaled
 #     automatically for other sizes). Times are frames at canvas.fps unless named _s.
-#   • After filling, run:  node scripts/build.mjs jobs/<any> --validate-only
+#   • Lives at <workspace>/.motion-graphics/DESIGN.md (never inside the plugin). After filling: node .motion-graphics/mg.mjs design validate
 # ============================================================================
 schema: motion-design/1.0
 id: my-brand                          # DERIVE: kebab-case of brand.name
@@ -29,7 +29,7 @@ brand:
   handle: null                        # ASK (optional): Main social handle?
   url: null                           # ASK: Website / CTA destination?
   logo:
-    primary: brand/logo.svg           # ASK: Upload your logo (SVG preferred, or PNG with transparency) — saved to public/brand/
+    primary: assets/logo.svg          # ASK: Upload your logo (SVG preferred, or PNG with transparency) — saved to .motion-graphics/assets/
     mono: null                        # optional single-colour version for busy backgrounds
     wordmark_fallback: MY BRAND       # DERIVE: brand.name uppercased; used when no logo file exists
     min_height_px: 96
@@ -158,7 +158,7 @@ motion:                               # ASK: Motion personality? → precise/mec
 audio:                                # ASK: Sound? → music + SFX (default) · SFX only · music only · silent (captions-first platforms)
   sample_rate: 48000
   music:
-    source: synth                     # synth | file | none   (file = your licensed track, 16-bit WAV 48 kHz in public/audio/)
+    source: synth                     # synth | file | none   (file = your licensed track, 16-bit WAV 48 kHz in .motion-graphics/assets/audio/)
     file: null
     preset: pulse_minimal             # ASK: Music mood? signal_drone (dark/tech) · pulse_minimal (product/launch) · warm_keys (human/calm) · dark_tension (problem/urgency)
     bpm: 100                          # 80-95 calm · 96-110 confident · 112-128 energetic

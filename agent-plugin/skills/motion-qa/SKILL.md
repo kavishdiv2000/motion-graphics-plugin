@@ -3,7 +3,7 @@ name: motion-qa
 description: Quality-assure motion-graphics renders — automated technical checks (codec, size, fps, duration, pixel format, loudness, true peak) plus a scored visual critique of contact sheets with a professional motion-director rubric and a fix loop that maps every problem to a change in DESIGN/CHOREOGRAPHY/CONTENT. Use after building stills or rendering a video, before delivering, or when asked to review/critique a motion-graphics video.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Motion QA
@@ -13,14 +13,15 @@ Quality comes from looking. Two layers: **machine checks** (objective, scripted)
 
 ## 1. Machine checks
 ```bash
-npm run build -- jobs/<id>     # copy, fit, timing, contrast, claims, platform limits (errors block)
-npm run stills -- jobs/<id>    # contact-<fmt>.png: mid-reveal + landed frame per scene
-npm run qa -- jobs/<id>        # after render: codec h264, size, fps, yuv420p, duration, audio, -14 LUFS ±1, ≤ -1 dBTP
+node .motion-graphics/mg.mjs validate <id>   # copy, fit, timing, contrast, claims, platform limits (errors block)
+node .motion-graphics/mg.mjs stills <id>     # build/contact-<fmt>.png: mid-reveal + landed frame per scene
+node .motion-graphics/mg.mjs qa <id>         # after render: codec h264, size, fps, yuv420p, duration, audio, -14 LUFS ±1, ≤ -1 dBTP
 ```
 `qa.<fmt>.json` → `verdict: PASS | PASS_WITH_WARNINGS | FAIL`. FAIL blocks delivery.
 
 ## 2. The director's pass: open the contact sheet and score it
-Open `jobs/<id>/contact-<fmt>.png` (and full-size stills with `--separate` when something looks off).
+Open `.motion-graphics/sessions/<id>/build/contact-<fmt>.png` (and full-size stills with `stills <id> --separate` when something looks off).
+Chat mode has no renders: the review gate is the user's approval of the beat table and scene table.
 Each tile is labelled `NN-mid` (mid-reveal) or `NN-land` (landed + 6 f). Score 0–2 per criterion:
 
 | # | Criterion | 2 = pro | 0 = fail |

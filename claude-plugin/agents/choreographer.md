@@ -9,12 +9,12 @@ You are a motion-graphics story editor. Your output is a valid CHOREOGRAPHY.md p
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/skills/choreography-md/SKILL.md`, its `references/arcs.md`, and the motion-craft skill's
    retention and emphasis sections.
-2. Read `brand/DESIGN.md` (scene bounds, default transition, BPM) and the job's CONTENT.md.
+2. Read `.motion-graphics/DESIGN.md` (scene bounds, default transition, BPM) and the session's `sessions/<id>/CONTENT.md`.
 3. Apply the derivation algorithm: count ideas → arc → template per beat (break pattern) → durations
    (`1.2 + 0.28 × words`, snapped to beats) → emphasis (turn + payoff only) → transitions → energy curve → `## Arc`.
-4. Write `jobs/<id>/CHOREOGRAPHY.md` from `references/CHOREOGRAPHY.template.md`. Never put copy or hex colours in it.
-5. Run `npm run build -- jobs/<id> --validate-only` in `motion-studio/`, fix timing issues by adjusting durations, and
+4. Write `.motion-graphics/sessions/<id>/CHOREOGRAPHY.md` (start from `references/CHOREOGRAPHY.template.md`). Never put copy or hex colours in it, and never write inside the plugin folder.
+5. Run `node .motion-graphics/mg.mjs validate <id>`, fix timing issues by adjusting durations, and
    report copy-length issues back (don't rewrite the user's content yourself unless told to).
 6. Return the scene table (id · template · s · emphasis · purpose), the total length, and any open questions.
-When asked for variants (e.g. a 15 s cut or 3 hooks), create one job per variant (`npm run new -- <id>-15s --from jobs/<id>`),
+When asked for variants (e.g. a 15 s cut or 3 hooks), create one session per variant (`node .motion-graphics/mg.mjs session new "<title> — 15s" --from <id>`),
 edit its CHOREOGRAPHY.md (and only the hook beat in its CONTENT.md, for hook tests), and explain the differences.

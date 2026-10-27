@@ -3,7 +3,7 @@ name: design-md
 description: Create, extract, validate or edit DESIGN.md, the static motion-design system (brand, colours, typography roles, textures, motion timing, audio palette, formats, export) that every motion-graphics video obeys. Use when setting up the motion-graphics pipeline for a brand, when the user uploads or asks for a design.md, or wants to derive a motion style from a website, brand guide or reference video.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   schema: motion-design/1.0
 ---
 
@@ -22,8 +22,11 @@ Files in this skill:
 
 ## Three ways to produce it
 
+Where it lives: **workspace mode** → `.motion-graphics/DESIGN.md` (one per workspace; never inside the plugin; start from
+`node .motion-graphics/mg.mjs design new --template` or `--example`). **Chat mode** → a complete file in the conversation.
+
 ### A. The user supplied one
-Copy it to `motion-studio/brand/DESIGN.md`, run `npm run build -- jobs/demo --validate-only`, fix any
+Workspace mode: save it as `.motion-graphics/DESIGN.md`, run `node .motion-graphics/mg.mjs design validate`, fix any
 errors (unknown colour tokens, missing roles), and summarise the system back in 3 lines.
 
 ### B. Interview (no reference available)
@@ -32,14 +35,18 @@ multiple-choice UI if the platform has it.
 
 | Turn | Ask | Maps to |
 |---|---|---|
-| 1 | Brand name · website/CTA URL · main platform · logo file | `brand.*`, `canvas.default_format`, `public/brand/` |
+| 1 | Brand name · website/CTA URL · main platform · logo file | `brand.*`, `canvas.default_format`, `.motion-graphics/assets/logo.svg` |
 | 2 | Colours (hex or "pull from site") · light or dark · text alignment | `colors.*`, `layout.anchor` |
 | 3 | Fonts (and licence) · motion personality · surface feel | `typography.families`, `motion.easing/timing`, `texture.*` |
 | 4 | Sound mode · music mood + tempo · anything the brand must never do | `audio.*`, `motion.forbidden` |
 
 Then DERIVE everything else (see the presets below), write the prose body, and show a summary card:
 palette swatches as hex, the three fonts, the personality in one sentence, scene length, music preset/BPM.
-Then build the demo job with it and **show the contact sheet**. A design isn't approved until it has been seen.
+Then preview it and **show the contact sheet**. A design isn't approved until it has been seen:
+`node .motion-graphics/mg.mjs session new "design preview" --example` (the reference reel's copy on *your* design), then
+`node .motion-graphics/mg.mjs stills <that session>` and open `build/contact-vertical.png`.
+**Chat mode:** no preview is possible. Output the complete DESIGN.md in one code block, describe the look in 3 lines,
+and ask for approval (see motion-graphics/references/chat-mode.md).
 
 ### C. Extract from a reference (website, brand guide, video)
 Follow `references/extraction-guide.md`. Record where each value came from in a comment.
@@ -75,15 +82,16 @@ logo or a client's mark into the design.
 - Display face carries the brand. Use one display face, one text face and optionally one mono face. Never more than three.
 - Extended/wide display → `fit: fill`, uppercase, hero ≤ 14 chars. Condensed display → hero ≤ 18 chars.
 - Body: a neutral grotesk (Inter, Manrope, IBM Plex Sans). Mono: JetBrains Mono, IBM Plex Mono, Space Mono.
-- After changing fonts: `npm i @fontsource/<family>`, import it in `src/fonts.ts`, `npm run metrics`.
+- Brand font files (any licensed .woff2/.ttf/.otf): `node .motion-graphics/mg.mjs font add <file> "<Family>" <weight>`, then set
+  `typography.families.<display|body|mono>: { family: <Family>, file: assets/fonts/<file>, weights: [<weight>] }`.
 
 ## Validation checklist (before saving)
 - [ ] every `color:` in roles names a key in `colors`
 - [ ] the label, setup, headline, tail, line and cta roles exist (stat and item if those templates are used)
 - [ ] `canvas.default_format` exists in `canvas.formats` and `canvas.safe_area`
 - [ ] every `audio.sfx.map` value is an id from the sound-design library (or null)
-- [ ] the demo job builds with no errors, and the contact sheet has been looked at
+- [ ] `mg design validate` passes and a preview session's contact sheet has been looked at (workspace mode)
 
 ## Editing later
-Changing DESIGN.md changes **every future video**. Bump `version`, add a line to the body
+Changing DESIGN.md changes **every future video**. Replace it with `mg design new --force` (a timestamped backup is kept) or edit in place; bump `version`, add a line to the body
 ("v1.1 — accent orange warmed to #FF6A1A") and re-render one reference job to compare.

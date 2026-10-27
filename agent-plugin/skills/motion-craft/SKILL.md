@@ -3,7 +3,7 @@ name: motion-craft
 description: Motion-design craft knowledge for kinetic typography and social motion graphics — timing in frames, easing curves, hierarchy, reveal choice, rhythm and beat-sync, transitions, colour emphasis, retention mechanics, and how to judge a frame like a motion director. Use when making creative decisions in the motion-graphics pipeline, choosing timings or reveals, designing a new template, or critiquing a render.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Motion craft: think like a motion director

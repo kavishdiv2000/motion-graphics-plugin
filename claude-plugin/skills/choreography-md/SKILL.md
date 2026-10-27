@@ -3,7 +3,7 @@ name: choreography-md
 description: Write or validate CHOREOGRAPHY.md, the per-video scene plan for the motion-graphics pipeline (narrative arc, scene order, template per beat, durations, emphasis/accent, transitions, music energy). Use when a user uploads a choreography, asks to storyboard or structure a motion-graphics video, or when one must be derived from CONTENT.md.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   schema: motion-choreography/1.0
 ---
 
@@ -49,7 +49,7 @@ Everything else you derive, and you explain the result in `## Arc`.
 7. **Energy curve** (0–1 per scene): start 0.5–0.6, climb to 0.85–0.95 at the payoff/protocol, dip to ~0.7 for the endcard.
    This layers the music (arp density, ticks, kick).
 8. **Write `## Arc`**: the argument in one line, why this arc, where the turn and payoff are, and the retention plan.
-9. **Show** the scene table to the user (or log it when unattended), then validate with `npm run build`.
+9. **Show** the scene table to the user (or log it when unattended), then validate (`node .motion-graphics/mg.mjs validate <session>`; in chat mode run the manual checklist in motion-graphics/references/chat-mode.md).
 
 ## Retention rules (non-negotiable)
 - Hero of scene 1 visible and landed by **1.5 s**. The first frame already shows the tag (no black lead-in).

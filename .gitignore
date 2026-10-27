@@ -10,5 +10,7 @@ node_modules/
 **/assets/engine/public/sfx/*.wav
 **/assets/engine/public/sfx/INDEX.md
 .DS_Store
-mgp.tgz
+
+# built for the Claude app upload screen (regenerate after edits)
 motion-graphics-claude-plugin.zip
+.motion-graphics/

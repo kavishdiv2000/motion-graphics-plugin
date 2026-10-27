@@ -35,21 +35,46 @@ in the system rather than in the model.
 
 ---
 
-## Quick start (any machine with Node ≥ 18.18; Node 20+ recommended)
+## Where your files go
+The plugins never write inside themselves. In **workspace mode** (any agent with a shell and a working directory: Claude Code,
+Codex, Cursor, Copilot agent mode, Claude desktop with a folder, CI) the plugin creates and manages one folder at the root of the
+workspace:
 
-```bash
-# 1. get the engine out of either plugin
-cp -r agent-plugin/skills/remotion-engine/assets/engine ./motion-studio      # PowerShell: Copy-Item -Recurse agent-plugin\skills\remotion-engine\assets\engine .\motion-studio
-cd motion-studio && npm install
-
-# 2. render the demo (recreates the reference reel's style and copy)
-npm run build  -- jobs/demo      # validate + spec + audio
-npm run stills -- jobs/demo      # jobs/demo/contact-vertical.png  ← look at this
-npm run render -- jobs/demo      # jobs/demo/out/demo-vertical.mp4 (first run downloads a headless Chrome)
-npm run qa     -- jobs/demo      # codec / fps / loudness checks
 ```
-Windows + OneDrive: keep `motion-studio/` **outside** OneDrive (or exclude `node_modules`), because syncing about 300 MB of
-node_modules makes installs crawl.
+<workspace>/.motion-graphics/
+  DESIGN.md                 static brand motion system: one per workspace, reused by every video
+  assets/                   logo.svg · fonts/ · audio/ (licensed music) · sfx/ (custom sounds)
+  sessions/<session-id>/    one folder per video session (e.g. 20261023-1317-agents-leverage)
+     session.json           title, status, which chat created it, formats, outputs, history
+     CONTENT.md             this video's words
+     CHOREOGRAPHY.md        this video's scene plan
+     build/                 spec, validation report, audio mix, contact sheets, QA (regenerable)
+     output/                <id>-<format>.mp4 · thumb-<format>.png · POST.md   ← the deliverables
+  inbox/                    drop CONTENT.md files here for unattended batch runs
+  mg.mjs                    the CLI agents call:  node .motion-graphics/mg.mjs <command>
+  .engine/                  render engine + node_modules (managed, git-ignored)
+  config.json · README.md · .gitignore
+```
+A new video always gets a new session folder. Edits, re-renders and extra formats of the same video reuse it. Each
+session records the conversation that created it, so an agent can continue "the video we were working on".
+
+In **chat mode** (ChatGPT, claude.ai chat, any UI without a shell or folder) the conversation is the session. The agent
+gathers and settles DESIGN, CONTENT and CHOREOGRAPHY with you in the chat, validates them against a manual checklist,
+and hands over the three complete files plus render instructions. It never claims to have rendered.
+Spec: [`motion-graphics/references/workspace.md`](agent-plugin/skills/motion-graphics/references/workspace.md) ·
+[`chat-mode.md`](agent-plugin/skills/motion-graphics/references/chat-mode.md).
+
+## Quick start without an agent (any machine with Node ≥ 18.18; Node 20+ recommended)
+```bash
+cd /path/to/your/project
+node /path/to/motion-graphics-plugin/agent-plugin/skills/motion-graphics/scripts/init-workspace.mjs .   # creates .motion-graphics/, installs the engine
+node .motion-graphics/mg.mjs demo                 # demo session with the reference reel's copy + example design
+node .motion-graphics/mg.mjs stills demo          # → .motion-graphics/sessions/demo-signal-ops/build/contact-vertical.png  (look at it)
+node .motion-graphics/mg.mjs make demo            # → …/output/demo-signal-ops-vertical.mp4, thumb, POST.md (first render downloads a headless Chrome)
+node .motion-graphics/mg.mjs help                 # every command
+```
+Windows + OneDrive: the engine's `node_modules` is about 300 MB. Exclude `.motion-graphics/.engine` from sync, or set
+`MOTION_GRAPHICS_ENGINE_DIR` to a folder outside OneDrive before running the setup script.
 
 Samples of the output are in [`docs/samples/`](docs/samples): the demo video in two aspect ratios, contact sheets and the SFX reel.
 
@@ -70,17 +95,17 @@ Check it: `claude plugin validate ./claude-plugin --strict`. In a session, `/plu
 
 | Command | Does |
 |---|---|
-| `/motion-graphics:make-video [job-id] [CONTENT.md] [CHOREOGRAPHY.md]` | the whole pipeline, interactive |
-| `/motion-graphics:setup-design [url / video / DESIGN.md]` | create the brand's static DESIGN.md |
-| `/motion-graphics:batch-videos [--limit N] [--formats …]` | unattended queue processing for schedules |
+| `/motion-graphics:make-video [title] [CONTENT.md] [CHOREOGRAPHY.md]` | the whole pipeline, interactive (new session folder per video) |
+| `/motion-graphics:setup-design [url / video / DESIGN.md]` | create the workspace's static `.motion-graphics/DESIGN.md` |
+| `/motion-graphics:batch-videos [--limit N] [--formats …]` | unattended: inbox → queued sessions → rendered outputs |
 | agents `motion-graphics:choreographer`, `motion-graphics:motion-qa-critic` | story/pacing specialist; independent reviewer |
 | skills `motion-graphics:*` (motion-graphics, design-md, choreography-md, content-md, motion-craft, remotion-engine, sound-design, motion-qa, social-distribution) | load automatically when relevant |
 
 **Claude app (claude.ai / desktop):** the same `claude-plugin/` folder installs as a plugin wherever your plan or
-organisation allows custom plugins (zip the folder, or publish the repo as a marketplace). Rendering needs an
-environment with Node, npm network access and a shell, which in practice means Claude Code or a linked computer.
+organisation allows custom plugins (upload a zip of the folder's *contents*, or publish the repo as a marketplace). With a
+linked folder it runs in workspace mode; in a plain chat it runs in chat mode (gathers and hands over the three files).
 
-**Scheduled runs:** see [docs/scheduling.md](docs/scheduling.md). In short, put job folders in `motion-studio/queue/` and
+**Scheduled runs:** see [docs/scheduling.md](docs/scheduling.md). In short, drop CONTENT.md files into `.motion-graphics/inbox/` and
 schedule `/motion-graphics:batch-videos --limit 3` as a Claude scheduled task, or run
 `claude -p "/motion-graphics:batch-videos --limit 3"` from cron or CI.
 
@@ -111,7 +136,7 @@ into its skills directory (for example a project `.agents/skills/` or the path i
 
 ### Any other model (no plugin system)
 Give the model, as context: `agent-plugin/skills/motion-graphics/SKILL.md` first, then the skills it names as it reaches
-each step (design-md, content-md, choreography-md, motion-craft, motion-qa). Run the `npm run …` commands it asks for and
+each step (design-md, content-md, choreography-md, motion-craft, motion-qa). Run the `node .motion-graphics/mg.mjs …` commands it asks for and
 paste back the output, and paste the contact-sheet image when it asks to look. See [docs/testing-with-other-models.md](docs/testing-with-other-models.md).
 
 ---
@@ -121,21 +146,24 @@ paste back the output, and paste the contact-sheet image when it asks to look. S
 ### Interactive (most common)
 > "Make a 30-second reel from this LinkedIn post: …"
 
-The agent then: sets up `motion-studio/` → checks `brand/DESIGN.md` (and interviews you if it's missing) → turns your text into
-CONTENT.md beats and shows them → derives CHOREOGRAPHY.md and shows the scene table → validates → renders a contact sheet
-and critiques it → renders → runs QA → hands you the MP4, the contact sheet and the caption/first comment/hashtags.
+Workspace mode: the agent sets up `.motion-graphics/` (first time) → checks `DESIGN.md` (interviews you if it's missing) →
+opens a session folder for this video → turns your text into CONTENT.md beats and shows them → derives CHOREOGRAPHY.md and
+shows the scene table → validates → renders a contact sheet and critiques it → renders → runs QA → delivers
+`sessions/<id>/output/` (MP4s, thumbnail, POST.md with caption, first comment and hashtags).
+Chat mode: the same intake and approvals in the conversation, ending with the three complete files and render instructions.
 
 ### With your own files
 Upload or point to `CONTENT.md` (+ optional `CHOREOGRAPHY.md`). Missing choreography is derived. Missing content is asked
-for, with an example. DESIGN.md is set **once per brand**: the agent reuses it for every video.
+for, with an example. They're written into the session folder. DESIGN.md is set **once per workspace**: the agent reuses
+it for every video.
 
 ### Several aspect ratios
-`npm run make -- jobs/<id> --formats vertical,square,horizontal`. The same markdown produces all of them; per-format layout
+`node .motion-graphics/mg.mjs make <session> --formats vertical,square,horizontal`. The same markdown produces all of them; per-format layout
 lives in `DESIGN.md → layout.per_format`.
 
 ### Variants
-Ask for "three hook variants" or "a 15 s cut". The choreographer creates one job per variant, and only the hook or the
-structure changes.
+Ask for "three hook variants" or "a 15 s cut". The agent creates one session per variant (`session new … --from <session>`),
+and only the hook or the structure changes.
 
 ---
 
@@ -147,8 +175,9 @@ structure changes.
 All three are markdown with **YAML front matter**. CHOREOGRAPHY and CONTENT also contain fenced ```` ```yaml ```` blocks with an
 `id:`. Those are the scenes and beats. Prose outside the YAML is for humans and models: the compiler ignores it.
 
-### 1. DESIGN.md (static: once per brand; `motion-studio/brand/DESIGN.md`)
-Everything about the *look and sound*, nothing about a particular video. Units: px at a 1080 px reference (auto-scaled),
+### 1. DESIGN.md (static: once per workspace; `.motion-graphics/DESIGN.md`)
+Everything about the *look and sound*, nothing about a particular video. Asset paths in it (logo, fonts, music) are
+relative to `.motion-graphics/`, and the files live in `.motion-graphics/assets/`. Units: px at a 1080 px reference (auto-scaled),
 timings in frames at `canvas.fps`, colours as `#RRGGBB`.
 
 | Section | Parameters | What they control |
@@ -177,7 +206,7 @@ type_done, count_tick, count_land, strike, logo_in, exit, transition`. Field-by-
 schema: motion-design/1.0
 id: signal-ops
 name: Signal Ops
-brand: { name: Damn Fine Agents, url: damnfineagents.com, logo: { primary: brand/logo.svg, wordmark_fallback: DFA } }
+brand: { name: Damn Fine Agents, url: damnfineagents.com, logo: { primary: assets/logo.svg, wordmark_fallback: DFA } }
 canvas: { default_format: vertical, fps: 30, formats: { vertical: { width: 1080, height: 1920 } }, safe_area: { vertical: { top: 0.12, bottom: 0.22, left: 0.074, right: 0.07 } } }
 colors: { background: "#0B0B07", text_primary: "#E8E8E4", text_secondary: "#B4B4AE", text_muted: "#6E6E68", accent_red: "#F82820", accent_orange: "#FF6A1A", label: "#F82820" }
 typography:
@@ -190,7 +219,7 @@ audio: { music: { preset: signal_drone, bpm: 100 }, sfx: { map: { decode_land: i
 ```
 </details>
 
-### 2. CHOREOGRAPHY.md (dynamic: one per video; `jobs/<id>/CHOREOGRAPHY.md`)
+### 2. CHOREOGRAPHY.md (dynamic: one per video; `.motion-graphics/sessions/<id>/CHOREOGRAPHY.md`)
 How the story flows. No copy, no colours.
 
 Front matter: `schema: motion-choreography/1.0`, `id`, `title`, `content` (file), `format`, `target_duration_s`,
@@ -216,7 +245,7 @@ Templates and their slots: **statement** label·setup·headline·tail · **title
 label·parts[{role: setup/line/headline/tail, text, accent}] · **stack** label·lines[2–4] · **stat** label·setup·value·tail ·
 **list** label·setup·items[2–5] · **compare** label·before·after·tail · **endcard** logo·label·setup·headline·tail·cta.
 
-### 3. CONTENT.md (dynamic: one per video; `jobs/<id>/CONTENT.md`)
+### 3. CONTENT.md (dynamic: one per video; `.motion-graphics/sessions/<id>/CONTENT.md`)
 What the video says. Front matter: `schema: motion-content/1.0`, `id`, `campaign`, `audience`, `pain`, `promise`, `objective`,
 `platforms[]`, `language`, `tone`, `cta{text, url, type}`, `claims[{text, type: rhetorical/statistic/testimonial/guarantee, source}]`
 (a `statistic` without a `source` fails the build).
@@ -250,7 +279,7 @@ the build warns on others (→ “ ” emoji).
 - **QA: a contact sheet rendered from the composition** (all scenes, mid and landed) that the agent must look at, plus probe and
   loudness checks after the render, plus an independent critic agent.
 
-### SFX library (50, all synthesised; audition: `npm run sfx` → `public/sfx/_reel.wav`)
+### SFX library (50, all synthesised; audition: `node .motion-graphics/mg.mjs sfx` → `.motion-graphics/assets/sfx-library/_reel.wav`)
 | Family | Sounds |
 |---|---|
 | UI / clicks (12) | click_soft · click_hard · key_soft · key_click · tick_hi · tick_lo · double_tick · toggle_on · toggle_off · relay_click · mouse_click · tap_wood |

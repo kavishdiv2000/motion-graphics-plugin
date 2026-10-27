@@ -1,47 +1,42 @@
 ---
 name: batch-videos
-description: Unattended batch production for schedules and automation — renders every pending job in motion-studio/queue/ (each a folder with CONTENT.md and optional CHOREOGRAPHY.md) using the static DESIGN.md, with no questions asked, and writes a run log. Invoke as /motion-graphics:batch-videos or from a scheduled task / `claude -p`.
-argument-hint: "[--formats vertical,square] [--limit N] [--queue path]"
+description: Unattended batch production for schedules and automation — ingests .motion-graphics/inbox/ into queued sessions and renders every queued session with the workspace's static DESIGN.md, asking no questions, then reports. Invoke as /motion-graphics:batch-videos or from a scheduled task / `claude -p`.
+argument-hint: "[--formats vertical,square] [--limit N]"
 ---
 
 # /motion-graphics:batch-videos (unattended)
 
-Options: `$ARGUMENTS` (defaults: formats = DESIGN default, limit = 5, queue = `motion-studio/queue`)
+Options: `$ARGUMENTS` (defaults: formats = each session's `requested_formats`, else DESIGN default; limit = 5)
 
-**Never ask the user anything in this skill.** Decide, log the decision, continue. Read the "Unattended / scheduled runs"
-section of `${CLAUDE_PLUGIN_ROOT}/skills/motion-graphics/SKILL.md` first; it overrides interactive behaviour.
+**Never ask the user anything here.** Decide, log the decision, continue. The "Unattended / scheduled runs" rules in
+`${CLAUDE_PLUGIN_ROOT}/skills/motion-graphics/SKILL.md` override interactive behaviour.
 
-## Queue contract
+## Inputs (all inside the workspace)
 ```
-motion-studio/queue/
-  2026-10-20-agents-leverage/      ← one folder per video (name = job id)
-    CONTENT.md                      ← required
-    CHOREOGRAPHY.md                 ← optional (derived when missing)
-    formats.txt                     ← optional, e.g. "vertical,square"
-  _done/  _failed/  _needs-human/   ← created by this skill
-  LOG.md                            ← appended by this skill
+.motion-graphics/inbox/
+  leverage-hook-a.md                 ← a CONTENT.md (any file name)
+  leverage-hook-b/                   ← or a folder: CONTENT.md [+ CHOREOGRAPHY.md] [+ formats.txt "vertical,square"]
+.motion-graphics/sessions/<id>/      ← sessions with status "queued" (created by `mg inbox` or `mg session new … --status queued`)
 ```
+External tools (n8n, Make, Zapier, a content calendar, CI) only need to drop files into `inbox/`.
 
 ## Procedure
-1. Workspace: `motion-studio/` must exist with `brand/DESIGN.md`. If DESIGN.md is missing or is still the shipped example
-   while the queue items reference another brand → write `LOG.md: BLOCKED — no brand DESIGN.md` and stop.
-2. `cd motion-studio && npm install --no-audit --no-fund` (fast when already installed).
-3. For each queue folder in name order (max `--limit`):
-   1. Copy it to `jobs/<name>/`.
-   2. No CHOREOGRAPHY.md → derive it with the choreography-md algorithm and DESIGN defaults (pace steady, target = beats × 4.4 s).
-   3. `npm run build -- jobs/<name>`. On errors, apply **only** mechanical fixes: shorten copy that breaks length/fit limits
-      (keep the meaning; log the before → after), lengthen scenes for timing errors. Up to 2 attempts. If it still fails,
-      or the error is `claim.source`, move the folder to `_needs-human/` with the report and continue.
-   4. `npm run stills -- jobs/<name>`, then read the contact sheet and score it with the motion-qa rubric. Below 14/22 → `_needs-human/`.
-   5. `npm run make -- jobs/<name> --formats <formats>` (render + QA). QA FAIL → one fix attempt, then `_failed/`.
-   6. Success → move the queue folder to `_done/` and append to `LOG.md`:
-      `| date | job | formats | duration | QA verdict | rubric score | fixes applied | output paths |`
-4. Finish with a summary line per job. If SendUserMessage/PushNotification exists, send the summary.
+1. Workspace root = `${CLAUDE_PROJECT_DIR}`. If `.motion-graphics/` is missing, run
+   `node "${CLAUDE_PLUGIN_ROOT}/skills/motion-graphics/scripts/init-workspace.mjs" "${CLAUDE_PROJECT_DIR}"`.
+2. If `.motion-graphics/DESIGN.md` is missing → report `BLOCKED: no DESIGN.md` and stop (brand decisions are never guessed).
+3. `node .motion-graphics/mg.mjs inbox`, then `node .motion-graphics/mg.mjs session list --status queued`.
+4. For each queued session (oldest first, up to `--limit`):
+   1. `session.json.needs_choreography` or the CHOREOGRAPHY.md is still the template → derive one with the choreography-md
+      algorithm and DESIGN defaults (pace steady, target = beats × 4.4 s). You may delegate to `motion-graphics:choreographer`.
+   2. `mg validate <id>`. On errors apply **only** mechanical fixes: shorten copy that breaks length/fit (keep the meaning;
+      log before → after in the report) or lengthen scenes for timing errors. Max 2 attempts. Still failing, or `claim.source`
+      → `mg session set <id> status=needs-human` and continue.
+   3. `mg stills <id>` → read the contact sheet → score with the motion-qa rubric. Below 14/22 → `status=needs-human`.
+   4. `mg make <id> [--formats …]`. QA FAIL → one fix attempt → else the CLI leaves `status=failed`.
+5. Summary: one line per session `id · status · formats · duration · QA · rubric score · output/` path, plus the needs-human
+   reasons. Send it with SendUserMessage / PushNotification if available.
 
 ## Scheduling it
-- **Claude Code scheduled task / routine**: prompt = `/motion-graphics:batch-videos --limit 3`, in a session that has this plugin
-  and the project folder.
-- **Cron / CI** (headless): `claude -p "/motion-graphics:batch-videos --limit 3" --permission-mode acceptEdits`
-  from the project root (allow `Bash(npm run *)` in `.claude/settings.json` permissions).
-- **GitHub Actions**: run the same command on `schedule:` with Node 20+, `npm ci` cached and Chrome cached;
-  upload `motion-studio/jobs/*/out/*.mp4` as artifacts. Publishing stays manual.
+- **Claude scheduled task**: prompt `/motion-graphics:batch-videos --limit 3` in an environment that has this plugin and the project folder.
+- **Cron / Task Scheduler / CI**: `claude -p "/motion-graphics:batch-videos --limit 3" --allowedTools "Bash(node .motion-graphics/mg.mjs *),Bash(node *init-workspace.mjs*),Read,Write,Edit,Glob,Grep"` from the project root.
+- Outputs stay in `.motion-graphics/sessions/<id>/output/`; publishing stays manual.

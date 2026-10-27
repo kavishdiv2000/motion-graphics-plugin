@@ -24,8 +24,8 @@ brand:
   handle: "@damnfineagents"
   url: damnfineagents.com
   logo:
-    primary: brand/logo.svg          # path relative to motion-studio/public/
-    mono: brand/logo-mono.svg
+    primary: assets/logo.svg         # relative to .motion-graphics/
+    mono: assets/logo-mono.svg
     wordmark_fallback: DFA           # rendered in the display face when no logo file exists
     min_height_px: 96
     clearspace_ratio: 0.5            # x logo height
@@ -164,7 +164,7 @@ audio:
   sample_rate: 48000
   music:
     source: synth                    # synth | file | none
-    file: null                       # e.g. audio/bed.wav when source: file
+    file: null                       # e.g. assets/audio/bed.wav when source: file
     preset: signal_drone             # signal_drone | pulse_minimal | warm_keys | dark_tension
     bpm: 100
     key: A
@@ -289,4 +289,4 @@ paragraphs · exclamation marks · flashing more than 3 times per second.
 ## 9. Agent notes
 - If content does not fit a template's character limits, **rewrite the copy** (and say so) rather than shrinking type.
 - When unsure about emphasis, use white. Accent only the word that carries the argument's turn.
-- Client or partner logos are never generated or traced; use the files in `public/brand/` or the wordmark fallback.
+- Client or partner logos are never generated or traced; use the files in `.motion-graphics/assets/` or the wordmark fallback.

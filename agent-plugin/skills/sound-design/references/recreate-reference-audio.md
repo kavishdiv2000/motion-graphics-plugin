@@ -29,5 +29,5 @@
 | Overall level | ≈ −14 LUFS | `master.lufs_target: -14` |
 | End | the bed decays over the last ~3 s | `fade_out_s: 2.5`, `stinger_logo` on the endcard |
 
-Result: `jobs/demo` reproduces the structure and feel (tempo, layering, event sync) with royalty-free procedural sound.
+Result: the demo session (`mg demo`) reproduces the structure and feel (tempo, layering, event sync) with royalty-free procedural sound.
 For a closer timbral match, replace the bed with a licensed track (`music.source: file`) and keep the SFX map.

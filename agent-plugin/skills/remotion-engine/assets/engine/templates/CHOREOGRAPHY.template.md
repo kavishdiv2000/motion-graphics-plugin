@@ -1,14 +1,15 @@
 ---
 # ============================================================================
 # CHOREOGRAPHY.md TEMPLATE — motion-choreography/1.0
-# DYNAMIC: one per video. HOW the story flows: scene order, templates, durations,
+# DYNAMIC: one per video, saved at .motion-graphics/sessions/<id>/CHOREOGRAPHY.md (or kept in the chat in chat mode).
+# HOW the story flows: scene order, templates, durations,
 # emphasis, transitions, music energy. NO copy here (that is CONTENT.md) and NO
 # visual style here (that is DESIGN.md).
 #   # ASK:    question for the user when no choreography was supplied
 #   # DERIVE: the agent decides from CONTENT.md + objective (explain choices in "Arc")
 # ============================================================================
 schema: motion-choreography/1.0
-id: my-video                          # DERIVE: kebab-case of title; also the job folder name
+id: my-video                          # set automatically to the session id by `mg session new`
 title: My video                       # ASK: Working title?
 content: CONTENT.md
 format: vertical                      # ASK: Format? vertical 9:16 · portrait 4:5 · square 1:1 · horizontal 16:9 (default = DESIGN canvas.default_format)

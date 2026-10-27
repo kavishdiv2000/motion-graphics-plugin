@@ -5,7 +5,7 @@ Work from evidence, not vibes. Each extracted value gets a comment saying where 
 ## From a reference video (MP4/MOV)
 
 1. **Probe**: `ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate,duration,sample_rate -of compact ref.mp4`
-   → canvas size, fps and length. (No system ffmpeg? Inside motion-studio: `npx remotion ffprobe …`.)
+   → canvas size, fps and length. (No system ffmpeg? Inside `.motion-graphics/.engine`: `npx remotion ffprobe …`.)
 2. **Contact sheets**: one frame per second, tiled:
    `ffmpeg -i ref.mp4 -vf "fps=1,scale=360:-1,tile=6x3" sheet_%02d.png`, then look at every sheet.
    Note: the scene count and scene length (where the copy changes), how text enters (word by word, scramble, type,

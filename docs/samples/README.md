@@ -1,6 +1,6 @@
 # Samples
 
-Rendered by the engine from `jobs/demo` (Signal Ops design + the reference reel's copy), unedited.
+Rendered by the engine from the demo session (`mg demo`: Signal Ops design + the reference reel's copy), unedited.
 
 | File | What |
 |---|---|

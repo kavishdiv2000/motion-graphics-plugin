@@ -11,7 +11,7 @@ Frames are at `canvas.fps`. Colours are `#RRGGBB`. "Read by" = which part of the
 | `brand.name` | string | — | wordmark fallback, post copy | endcard |
 | `brand.voice` | string[] | — | copy tone for content-md normalisation | agent |
 | `brand.url`, `brand.handle` | string | null | CTA defaults, post copy | agent |
-| `brand.logo.primary` | path in `public/` | brand/logo.svg | rendered on endcards if the file exists | endcard |
+| `brand.logo.primary` | path relative to `.motion-graphics/` | assets/logo.svg | rendered on endcards if the file exists | endcard |
 | `brand.logo.wordmark_fallback` | string | brand name | text logo when no file | endcard |
 | `brand.logo.min_height_px`, `clearspace_ratio` | number | 96, 0.5 | logo size / spacing | endcard |
 | `brand.legal.disclaimer` | string | null | add a `tail` or a final card if present | agent |
@@ -96,7 +96,7 @@ Frames are at `canvas.fps`. Colours are `#RRGGBB`. "Read by" = which part of the
 | Field | Default | Notes |
 |---|---|---|
 | `audio.sample_rate` | 48000 | |
-| `audio.music.source` | synth | synth \| file (16-bit WAV in public/) \| none |
+| `audio.music.source` | synth | synth \| file (16-bit WAV in .motion-graphics/assets/audio/) \| none |
 | `audio.music.preset` | signal_drone | signal_drone \| pulse_minimal \| warm_keys \| dark_tension |
 | `audio.music.bpm`, `key`, `scale` | 100, A, minor | tempo also drives scene beat-snapping |
 | `audio.music.gain_db`, `fade_in_s`, `fade_out_s`, `duck_db` | −17, 0.8, 2.5, 4 | bed level and ducking under hero hits |

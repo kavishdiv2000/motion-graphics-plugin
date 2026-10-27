@@ -1,20 +1,14 @@
 {
   "name": "motion-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Deterministic motion-graphics engine: DESIGN.md + CHOREOGRAPHY.md + CONTENT.md -> spec.json -> Remotion render -> MP4",
+  "description": "Deterministic motion-graphics engine, installed per workspace at .motion-graphics/.engine: DESIGN.md + session CHOREOGRAPHY.md + CONTENT.md -> spec -> Remotion render -> MP4",
   "scripts": {
-    "new": "node scripts/new-job.mjs",
-    "build": "node scripts/build.mjs",
-    "validate": "node scripts/build.mjs --validate-only",
-    "stills": "node scripts/stills.mjs",
-    "render": "node scripts/render.mjs",
-    "qa": "node scripts/qa.mjs",
-    "make": "node scripts/make.mjs",
+    "mg": "node scripts/mg.mjs",
     "sfx": "node scripts/sfx-library.mjs",
     "metrics": "node scripts/font-metrics.mjs",
-    "studio": "remotion studio src/index.ts"
+    "sfx-docs": "node scripts/sfx-docs.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
@@ -23,6 +17,7 @@
     "@remotion/bundler": "4.0.531",
     "@remotion/cli": "4.0.531",
     "@remotion/renderer": "4.0.531",
+    "fontkit": "2.0.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "remotion": "4.0.531",
@@ -30,7 +25,6 @@
   },
   "devDependencies": {
     "@types/react": "18.3.12",
-    "fontkit": "^2.0.4",
     "typescript": "5.6.3"
   },
   "engines": {

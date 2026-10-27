@@ -10,6 +10,12 @@ function useFontsReady(spec: any) {
   const [handle] = useState(() => delayRender('fonts'));
   useEffect(() => {
     const loads: Promise<unknown>[] = [];
+    // custom brand fonts from .motion-graphics/assets/fonts (staged next to the bundle)
+    for (const f of spec.design.fontFaces || []) {
+      const face = new FontFace(f.family, `url(${staticFile(f.src)})`, { weight: String(f.weight) });
+      document.fonts.add(face);
+      loads.push(face.load());
+    }
     for (const r of Object.values<any>(spec.design.roles)) {
       const fam = String(r.fontFamily).split(',')[0];
       loads.push(document.fonts.load(`${r.weight || 400} 64px ${fam}`));
