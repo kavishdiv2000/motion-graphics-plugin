@@ -58,7 +58,9 @@ Rules: never write user files anywhere else; never edit `.engine/` or `mg.mjs`; 
 2. Otherwise run the bootstrap that ships with this skill (it copies the engine, installs dependencies, creates the folders):
    - Claude Code: `node "${CLAUDE_PLUGIN_ROOT}/skills/motion-graphics/scripts/init-workspace.mjs" "<workspace root>"`
    - Any agent: `node <this skill's folder>/scripts/init-workspace.mjs "<workspace root>"`
-     (if you can't resolve the folder: `find / -path '*motion-graphics/scripts/init-workspace.mjs' 2>/dev/null | head -1`;
+     Typical install locations: Cursor `~/.cursor/plugins/local/motion-graphics/skills/motion-graphics/scripts/` ·
+     Claude Code local `~/.claude/skills/motion-graphics/skills/motion-graphics/scripts/` · Codex `~/.codex/plugins/cache/*/motion-graphics/*/skills/motion-graphics/scripts/`
+     (else: `find ~ / -path '*motion-graphics/scripts/init-workspace.mjs' 2>/dev/null | head -1`;
      PowerShell: `Get-ChildItem $HOME -Recurse -Filter init-workspace.mjs -EA SilentlyContinue | select -First 1`)
    - The workspace root is the project/working directory the user opened, **not** the plugin folder (the script refuses that).
 3. Needs Node ≥ 18.18 (20+ recommended) and network for `npm install` the first time. On OneDrive/Dropbox the script

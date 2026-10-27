@@ -12,7 +12,8 @@ motion-graphics-plugin/
 │  └─ agents/  (choreographer, motion-qa-critic)
 ├─ .claude-plugin/marketplace.json   Claude Code marketplace → ./claude-plugin
 ├─ .agents/plugins/marketplace.json  Codex/ChatGPT repo marketplace → ./agent-plugin
-├─ scripts/sync-plugins.mjs  scripts/validate-plugins.mjs
+├─ scripts/build.sh  scripts/install-local.sh  scripts/sync-plugins.mjs  scripts/validate-plugins.mjs
+├─ build/                            (generated, git-ignored) packaged folders, zips, local marketplaces, INSTALL.md
 └─ docs/
 ```
 
@@ -22,7 +23,9 @@ motion-graphics-plugin/
    `node agent-plugin/skills/motion-graphics/scripts/init-workspace.mjs /tmp/mg-test --force-engine`, then
    `node /tmp/mg-test/.motion-graphics/mg.mjs demo && node /tmp/mg-test/.motion-graphics/mg.mjs stills demo` and **look** at the
    sheet. Bump the engine `version` in package.json so existing workspaces upgrade on their next setup run.
-3. `node scripts/sync-plugins.mjs`, then `node scripts/validate-plugins.mjs`, then `claude plugin validate ./claude-plugin --strict`.
+3. `./scripts/build.sh --smoke` syncs, validates (`validate-plugins.mjs` + `claude plugin validate` when the CLI exists),
+   packages `build/` and smoke-tests the built agent plugin in a throw-away workspace.
+   Then install locally: `./scripts/install-local.sh cursor|claude`, or use `claude --plugin-dir build/claude-plugin/motion-graphics`.
 4. Bump the versions in `agent-plugin/plugin.json`, `claude-plugin/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
    and add a CHANGELOG entry.
 
@@ -47,6 +50,8 @@ contact sheet with `docs/samples/contact-vertical.png` → run QA → sync.
 ## CI suggestion
 ```yaml
 - run: node scripts/sync-plugins.mjs --check
-- run: node scripts/validate-plugins.mjs
+- run: ./scripts/build.sh --no-sync --smoke
+- uses: actions/upload-artifact@v4
+  with: { name: plugins, path: build/dist/ }
 - run: node agent-plugin/skills/motion-graphics/scripts/init-workspace.mjs ./ci-ws && node ci-ws/.motion-graphics/mg.mjs demo
 ```

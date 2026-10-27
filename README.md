@@ -15,7 +15,7 @@ CONTENT.md (the words)           ─┘                     └─► synthesise
 | [`agent-plugin/`](agent-plugin) | Cross-platform **Agent Plugins 1.0** package (`plugin.json` + `skills/`) | Codex / ChatGPT, Cursor, GitHub Copilot, VS Code, Kiro, any Agent-Skills client |
 | [`claude-plugin/`](claude-plugin) | **Claude Code plugin** (`.claude-plugin/plugin.json`, skills, subagents) incl. a scheduled batch skill | Claude Code, scheduled tasks, `claude -p` / CI |
 | [`docs/`](docs) | Architecture, decisions, guides, samples | humans |
-| [`scripts/`](scripts) | `sync-plugins.mjs` (keeps both plugins identical), `validate-plugins.mjs` | development |
+| [`scripts/`](scripts) | `build.sh` (packages into `build/`), `install-local.sh` (Cursor / Claude Code), `sync-plugins.mjs`, `validate-plugins.mjs` | development |
 
 ## Why this exists
 Frontier models such as Claude Opus 5.5 can design good motion graphics from a blank page. Most other models
@@ -80,19 +80,69 @@ Samples of the output are in [`docs/samples/`](docs/samples): the demo video in 
 
 ---
 
-## Install
+## Install (locally, no marketplace)
 
-### Claude Code
+### 1. Build the packages
 ```bash
-# try it for one session
-claude --plugin-dir ./claude-plugin
-
-# or install through this repo's marketplace (local path or GitHub owner/repo)
-/plugin marketplace add ./                      # or: /plugin marketplace add <github-user>/motion-graphics-plugin
-/plugin install motion-graphics@motion-graphics-plugins
+./scripts/build.sh            # sync → validate → stage → zip → (claude plugin validate, if the CLI is installed)
+./scripts/build.sh --smoke    # + bootstrap a throw-away workspace from the built plugin and validate the demo
 ```
-Check it: `claude plugin validate ./claude-plugin --strict`. In a session, `/plugin` lists the skills and agents.
+Windows: run it from **Git Bash** (or WSL). It needs Node 18+ and `tar`; zips are made with `zip`, Windows' built-in
+`tar.exe`, or Python, whichever is available.
 
+```
+build/
+├─ agent-plugin/motion-graphics/        Agent Plugins 1.0 folder (plugin.json + skills/)    → Cursor, Copilot, VS Code, Kiro, Codex
+├─ claude-plugin/motion-graphics/       Claude Code folder (.claude-plugin/ + skills/ + agents/) → Claude Code
+├─ .claude-plugin/marketplace.json      local Claude Code marketplace (points at ./claude-plugin/motion-graphics)
+├─ .agents/plugins/marketplace.json     local Codex marketplace (points at ./agent-plugin/motion-graphics)
+├─ dist/motion-graphics-agent-plugin-<v>.zip    plugin.json at the zip root
+├─ dist/motion-graphics-claude-plugin-<v>.zip   .claude-plugin/plugin.json at the zip root  → Claude app upload
+├─ dist/SHA256SUMS
+└─ INSTALL.md                           the commands below with your machine's absolute paths
+```
+The folders are named after the plugin (`motion-graphics`) because some clients name a local plugin after its folder.
+`build/` is git-ignored: rebuild after every change.
+
+### 2. Install into a client
+| Client | Install from the build | Check it |
+|---|---|---|
+| **Claude Code**: one session | `claude --plugin-dir build/claude-plugin/motion-graphics` (or the claude zip) | `/plugin` → Installed shows **motion-graphics** |
+| **Claude Code**: every session, no marketplace | `./scripts/install-local.sh claude` → copies to `~/.claude/skills/motion-graphics`, then `/reload-plugins` | `claude plugin list` shows `motion-graphics@skills-dir` 1.1.0 |
+| **Claude Code**: via the local marketplace | `/plugin marketplace add ./build` → `/plugin install motion-graphics@motion-graphics-local` | `/plugin` |
+| **Claude Code**: portable variant | `claude --plugin-dir build/agent-plugin/motion-graphics` (skills only, no agents/commands) | |
+| **Claude app** (claude.ai / desktop) | Settings → Plugins → *Upload a plugin* → `build/dist/motion-graphics-claude-plugin-<v>.zip` | the plugin list shows v1.1.0 (remove an older upload first) |
+| **Cursor** | `./scripts/install-local.sh cursor` → copies to `~/.cursor/plugins/local/motion-graphics`, then **Developer: Reload Window** | Settings → Plugins / skills list shows motion-graphics |
+| **Codex / ChatGPT desktop** | `codex plugin marketplace add ./build` → install "motion-graphics" from the plugin list → restart | the plugin list |
+| **Copilot · VS Code · Kiro** | the client's "install plugin from folder" → `build/agent-plugin/motion-graphics` | the client's plugin/skills list |
+| **Skills-only clients** | copy `build/agent-plugin/motion-graphics/skills/*` into the client's skills folder | |
+
+Manual equivalents without the scripts (PowerShell):
+```powershell
+# Cursor
+Copy-Item -Recurse -Force build\agent-plugin\motion-graphics "$env:USERPROFILE\.cursor\plugins\local\motion-graphics"
+# Claude Code (loads every session)
+Copy-Item -Recurse -Force build\claude-plugin\motion-graphics "$env:USERPROFILE\.claude\skills\motion-graphics"
+```
+Uninstall: `./scripts/install-local.sh uninstall cursor|claude|all`.
+Cursor notes: copy, don't symlink (links pointing outside `local/` are ignored). On Enterprise plans an admin must enable
+*Allow Local Plugin Imports*.
+
+### 3. Test it locally
+1. Open any project folder in the client, with the plugin loaded.
+2. Ask: **"Set up motion graphics here and run the demo."** The agent should run the plugin's `init-workspace.mjs`, which creates
+   `.motion-graphics/` in that project, then `node .motion-graphics/mg.mjs demo` and `stills demo`, and show
+   `.motion-graphics/sessions/demo-signal-ops/build/contact-vertical.png`.
+3. Ask: **"Make a 20-second reel from: Most teams don't need more tools. They need fewer handoffs."** Expect a new
+   `sessions/<id>/` folder with CONTENT.md and CHOREOGRAPHY.md, a beat table and scene table for approval, then
+   `output/<id>-vertical.mp4`, a thumbnail and POST.md.
+4. Chat-mode test: paste `skills/motion-graphics/SKILL.md` and `references/chat-mode.md` into a plain chat and ask for a
+   video. It should hand back the three files and must not claim a render.
+
+Without any agent: `node build/agent-plugin/motion-graphics/skills/motion-graphics/scripts/init-workspace.mjs <project>`,
+then `node <project>/.motion-graphics/mg.mjs demo`.
+
+### Claude Code commands
 | Command | Does |
 |---|---|
 | `/motion-graphics:make-video [title] [CONTENT.md] [CHOREOGRAPHY.md]` | the whole pipeline, interactive (new session folder per video) |
@@ -101,43 +151,19 @@ Check it: `claude plugin validate ./claude-plugin --strict`. In a session, `/plu
 | agents `motion-graphics:choreographer`, `motion-graphics:motion-qa-critic` | story/pacing specialist; independent reviewer |
 | skills `motion-graphics:*` (motion-graphics, design-md, choreography-md, content-md, motion-craft, remotion-engine, sound-design, motion-qa, social-distribution) | load automatically when relevant |
 
-**Claude app (claude.ai / desktop):** the same `claude-plugin/` folder installs as a plugin wherever your plan or
-organisation allows custom plugins (upload a zip of the folder's *contents*, or publish the repo as a marketplace). With a
-linked folder it runs in workspace mode; in a plain chat it runs in chat mode (gathers and hands over the three files).
+**Scheduled runs:** see [docs/scheduling.md](docs/scheduling.md). Drop CONTENT.md files into `.motion-graphics/inbox/` and
+schedule `/motion-graphics:batch-videos --limit 3`, or run `claude -p "/motion-graphics:batch-videos --limit 3"` from cron/CI.
 
-**Scheduled runs:** see [docs/scheduling.md](docs/scheduling.md). In short, drop CONTENT.md files into `.motion-graphics/inbox/` and
-schedule `/motion-graphics:batch-videos --limit 3` as a Claude scheduled task, or run
-`claude -p "/motion-graphics:batch-videos --limit 3"` from cron or CI.
-
-### Codex / ChatGPT
-OpenAI clients accept the portable Agent Plugins layout (root `plugin.json`). This repo includes a repo marketplace at
-`.agents/plugins/marketplace.json`:
-```bash
-codex plugin marketplace add ./          # or: codex plugin marketplace add <github-user>/motion-graphics-plugin
-# then install "motion-graphics" from the plugin list in Codex / the ChatGPT desktop app, and restart it
-```
-On Codex CLI builds with direct installs: `codex plugins install ./agent-plugin`.
-Personal catalogue alternative: add the same entry to `~/.agents/plugins/marketplace.json` with an absolute path.
-
-### Cursor
-```bash
-# macOS / Linux
-mkdir -p ~/.cursor/plugins/local && cp -r agent-plugin ~/.cursor/plugins/local/motion-graphics
-# Windows (PowerShell)
-Copy-Item -Recurse agent-plugin "$env:USERPROFILE\.cursor\plugins\local\motion-graphics"
-```
-Then **Developer: Reload Window**. Enterprise teams: an admin must enable *Allow Local Plugin Imports*. Copy the folder
-rather than symlinking it (symlinks that point outside `local/` aren't picked up).
-
-### GitHub Copilot · VS Code · Kiro · other Agent Plugins clients
-These clients load the Agent Plugins 1.0 format from a directory. Point the client's "install from folder / local
-plugin" option at `agent-plugin/`. If a client supports **Agent Skills** but not plugins, copy `agent-plugin/skills/*`
-into its skills directory (for example a project `.agents/skills/` or the path its docs give).
+### Later: publishing
+The repo root also has marketplace files (`.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`) pointing at
+the source folders. Once the repo is on GitHub, others can run `/plugin marketplace add <user>/<repo>` (Claude Code) or
+`codex plugin marketplace add <user>/<repo>`. Nothing in the local workflow above depends on that.
 
 ### Any other model (no plugin system)
 Give the model, as context: `agent-plugin/skills/motion-graphics/SKILL.md` first, then the skills it names as it reaches
 each step (design-md, content-md, choreography-md, motion-craft, motion-qa). Run the `node .motion-graphics/mg.mjs …` commands it asks for and
 paste back the output, and paste the contact-sheet image when it asks to look. See [docs/testing-with-other-models.md](docs/testing-with-other-models.md).
+Spec conformance review: [docs/agent-plugins-conformance.md](docs/agent-plugins-conformance.md).
 
 ---
 
@@ -296,6 +322,7 @@ Music presets: `signal_drone` (the reference reel: sub drone + saw pad + Karplus
 
 ## Development
 ```bash
+./scripts/build.sh [--smoke]            # sync + validate + package everything into build/ (see Install)
 node scripts/sync-plugins.mjs           # agent-plugin/skills is canonical → mirrors into claude-plugin, refreshes engine templates
 node scripts/sync-plugins.mjs --check   # CI: fail if the plugins drift
 node scripts/validate-plugins.mjs       # Agent Plugins + Agent Skills rules, Claude manifest/agents

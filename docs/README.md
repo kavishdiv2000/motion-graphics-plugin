@@ -8,6 +8,7 @@
 | [decisions/audio.md](decisions/audio.md) | why procedural audio, how the SFX/music/mix work, AI/licensed options |
 | [scheduling.md](scheduling.md) | unattended / scheduled batch production with the Claude plugin |
 | [testing-with-other-models.md](testing-with-other-models.md) | benchmarking Sonnet, GPT, Gemini etc. against Opus with these skills |
+| [agent-plugins-conformance.md](agent-plugins-conformance.md) | how `agent-plugin/` maps to the Agent Plugins 1.0 spec, and how clients load it |
 | [development.md](development.md) | extending skills or the engine, syncing, validating, releasing |
 | [samples/](samples) | rendered demo (9:16 and 1:1), contact sheets, SFX audition reel |
 
