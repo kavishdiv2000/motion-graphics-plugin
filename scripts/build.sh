@@ -24,6 +24,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Git Bash / MSYS / Cygwin: bash says /c/Users/..., but Windows node.exe only understands C:/Users/...
+# "Mixed" paths (C:/Users/...) work for both, so use them everywhere.
+if command -v cygpath >/dev/null 2>&1; then ROOT="$(cygpath -m "$ROOT")"; fi
 BUILD="$ROOT/build"
 SMOKE=0; SYNC=1
 for a in "$@"; do
@@ -43,9 +46,11 @@ die()  { printf '\033[1;31m✖ %s\033[0m\n' "$*" >&2; exit 1; }
 command -v node >/dev/null || die "node not found (install Node 20+ from nodejs.org)"
 command -v tar  >/dev/null || die "tar not found"
 
-NAME="$(node -p "require('$ROOT/agent-plugin/plugin.json').name")"
-VERSION="$(node -p "require('$ROOT/agent-plugin/plugin.json').version")"
-CVERSION="$(node -p "require('$ROOT/claude-plugin/.claude-plugin/plugin.json').version")"
+# read a JSON field: json_get <file> <expr on m>   (paths go in as arguments, never pasted into JS source)
+json_get() { node -e 'const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); console.log(eval(process.argv[2]) ?? "")' "$1" "$2"; }
+NAME="$(json_get "$ROOT/agent-plugin/plugin.json" 'm.name')"
+VERSION="$(json_get "$ROOT/agent-plugin/plugin.json" 'm.version')"
+CVERSION="$(json_get "$ROOT/claude-plugin/.claude-plugin/plugin.json" 'm.version')"
 [ "$VERSION" = "$CVERSION" ] || die "version mismatch: agent-plugin $VERSION vs claude-plugin $CVERSION (bump both)"
 
 # Generated / heavy paths that never belong in a package
@@ -69,7 +74,8 @@ make_zip() { # make_zip <src-dir> <out.zip>   (zip the CONTENTS of src-dir, dotf
   if command -v zip >/dev/null 2>&1; then
     (cd "$src" && zip -qrX "$out" .)
   elif BSDTAR="$(find_bsdtar)"; then
-    (cd "$src" && "$BSDTAR" -a -cf "$out" .)
+    # list the entries explicitly so names are "plugin.json", not "./plugin.json" (some unzippers reject ./ entries)
+    (cd "$src" && shopt -s dotglob nullglob && set -- * && "$BSDTAR" -a -cf "$out" "$@")
   elif PY="$(command -v python3 || command -v python || true)" && [ -n "$PY" ]; then
     "$PY" - "$src" "$out" <<'PY'
 import os, sys, zipfile
@@ -120,8 +126,8 @@ AGENT_PLUGIN_DIR="$AP" CLAUDE_PLUGIN_DIR="$CP" node "$ROOT/scripts/validate-plug
 
 # ── 3. local marketplaces (install by name without publishing anything) ─────
 mkdir -p "$BUILD/.claude-plugin" "$BUILD/.agents/plugins"
-DESC="$(node -p "require('$AP/plugin.json').description.split('.')[0]")"
-AUTHOR="$(node -p "require('$AP/plugin.json').author?.name || 'unknown'")"
+DESC="$(json_get "$AP/plugin.json" 'm.description.split(".")[0]')"
+AUTHOR="$(json_get "$AP/plugin.json" 'm.author?.name || "unknown"')"
 cat > "$BUILD/.claude-plugin/marketplace.json" <<JSON
 {
   "name": "$NAME-local",

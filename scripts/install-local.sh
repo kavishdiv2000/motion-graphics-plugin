@@ -13,9 +13,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if command -v cygpath >/dev/null 2>&1; then ROOT="$(cygpath -m "$ROOT")"; fi   # Git Bash: C:/... so node.exe understands it
 BUILD="$ROOT/build"
 [ -d "$BUILD" ] || { echo "✖ no build/ — run ./scripts/build.sh first" >&2; exit 1; }
-NAME="$(node -p "require('$BUILD/agent-plugin/' + require('fs').readdirSync('$BUILD/agent-plugin')[0] + '/plugin.json').name")"
+NAME="$(ls "$BUILD/agent-plugin" | head -1)"
+[ -f "$BUILD/agent-plugin/$NAME/plugin.json" ] || { echo "✖ build/agent-plugin/$NAME/plugin.json missing — re-run ./scripts/build.sh" >&2; exit 1; }
 HOME_DIR="${USERPROFILE:-$HOME}"; HOME_DIR="$(command -v cygpath >/dev/null 2>&1 && cygpath -u "$HOME_DIR" || echo "$HOME_DIR")"
 
 CURSOR_DST="$HOME_DIR/.cursor/plugins/local/$NAME"
