@@ -32,7 +32,7 @@ my-plugin/                           motion-graphics/
 | 5.2 | only `$schema, name, version, description, author, homepage, repository, license, keywords, extensions` | ✔ (no unknown fields) |
 | 5.3/5.5 | `name` 1–64 chars, `[a-z0-9.-]`, alphanumeric ends, no `--`/`..` | ✔ `motion-graphics` |
 | 5.4 | `author` only `name`/`email`/`url` | ✔ |
-| 5.4/10.2 | `version` SemVer | ✔ `1.1.0` |
+| 5.4/10.2 | `version` SemVer | ✔ `1.4.0` |
 | 5.4 | `license` SPDX | ✔ `MIT` |
 | 6.2 | missing `mcp.json` is not an error | ✔ |
 | 7.1 | skills conform to the Agent Skills spec (`name` = folder name, lowercase-hyphen, description ≤ 1024 chars, optional `license`/`metadata` string map; `scripts/`, `references/`, `assets/` subfolders) | ✔ validator checks name/description/length; bodies < 500 lines |
@@ -58,7 +58,7 @@ my-plugin/                           motion-graphics/
 ## Client behaviour observed (Claude Code 2.1.311)
 | Loaded with `--plugin-dir` | Claude Code shows |
 |---|---|
-| `build/claude-plugin/motion-graphics/` | `motion-graphics@inline`, version 1.1.0 (reads `.claude-plugin/plugin.json`) |
+| `build/claude-plugin/motion-graphics/` | `motion-graphics@inline`, version 1.4.0 (reads `.claude-plugin/plugin.json`) |
 | `build/agent-plugin/motion-graphics/` | `motion-graphics@inline`, version "unknown": Claude Code ignores the root `plugin.json` and names the plugin after the folder, so the build names the folder after the plugin |
-| `dist/motion-graphics-claude-plugin-1.1.0.zip` | `motion-graphics@inline`, version 1.1.0 |
-| `dist/motion-graphics-agent-plugin-1.1.0.zip` | named after the zip file. Use the Claude zip or folder for Claude Code |
+| `dist/motion-graphics-claude-plugin-1.4.0.zip` | `motion-graphics@inline`, version 1.4.0 |
+| `dist/motion-graphics-agent-plugin-1.4.0.zip` | named after the zip file. Use the Claude zip or folder for Claude Code |

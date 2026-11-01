@@ -99,12 +99,18 @@ Frames are at `canvas.fps`. Colours are `#RRGGBB`. "Read by" = which part of the
 | `audio.music.source` | synth | synth \| file (16-bit WAV in .motion-graphics/assets/audio/) \| none |
 | `audio.music.preset` | signal_drone | signal_drone \| pulse_minimal \| warm_keys \| dark_tension |
 | `audio.music.bpm`, `key`, `scale` | 100, A, minor | tempo also drives scene beat-snapping |
-| `audio.music.gain_db`, `fade_in_s`, `fade_out_s`, `duck_db` | −17, 0.8, 2.5, 4 | bed level and ducking under hero hits |
-| `audio.sfx.gain_db` | −9 | base SFX level (per-event offsets in the engine) |
-| `audio.sfx.min_spacing_frames` | {word_in:3,…} | throttles rapid events |
-| `audio.sfx.map.<event>` | ids | events: scene_in, label_in, word_in, decode_start, decode_land, decode_land_minor, type_char, type_done, count_tick, count_land, strike, logo_in, exit, transition |
-| `audio.sfx.gains.<event>` | — | optional dB offsets per event |
+| `audio.music.gain_db`, `fade_in_s`, `fade_out_s` | −17, 0.1, 0.6 | bed level and fades (classic designs: 0.8 / 2.5) |
+| `audio.music.percussion` | false (kits), true (classic) | the synth beds' drum layers: hat-like 16th ticks, the kick on energy peaks, dark_tension's heartbeat. Off = pad, arp and drone only |
+| `audio.music.stop_down` | auto | kit modes: `auto` (the kit's rule; launch: music steps down ~9 dB for 0.4 s before hit / drop / whoosh.long / swell and comes back ON it) · `off` · `{ depth_db, length_s, roles }` |
+| `audio.music.duck_db` | 4 | classic mode only: duck under hero hits |
+| `audio.sfx.kit` | studio | **sound kit**: `studio` (clean, drum-free professional default) · `launch` · `calm` · `crisp` · `minimal` · `none` · `classic` (the legacy synth map below). All kits are drum-free (no kicks, thumps or sub drops). Kits: sound-design skill → `references/kits.md` |
+| `audio.sfx.trim_db` | 0 | kit modes: the whole effects layer up / down |
+| `audio.sfx.level` | auto | kit modes: `auto` (effects levelled over the music bed when there is one) · `level` (fixed role levels) |
+| `audio.sfx.roles.<role>` | — | kit modes: `null` silences a role; `{ sound, offset_ms, bed_db, level_db, min_gap_ms, align, pitches }` overrides it. `sound` = a pack id (`cut_hit/kick`), a synth id (`impact_punch`) or a custom `.wav` id |
+| `audio.sfx.events.<event>` | — | kit modes: event → role (or null). Events: scene_in, label_in, word_in, words_done, decode_start, decode_land, decode_land_minor, type_char, type_space, type_done, count_tick, count_land, strike, fade_in, logo_in, exit, transition |
+| `audio.sfx.gain_db`, `min_spacing_frames`, `map.<event>`, `gains.<event>` | −9, …, ids, — | **classic mode only** (`kit: classic` or no kit): base level, throttling, event → synth id, per-event offsets |
 | `audio.master.lufs_target`, `true_peak_db` | −14, −1 | platform loudness targets |
+| `audio.master.codec_headroom_db` | 0.5 (kits), 0 (classic) | extra limiter headroom so the AAC-encoded file stays under `true_peak_db` |
 
 ## Endcard, export, accessibility
 | Field | Default | Notes |

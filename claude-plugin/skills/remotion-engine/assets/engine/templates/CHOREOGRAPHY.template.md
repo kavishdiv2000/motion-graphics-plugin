@@ -43,7 +43,7 @@ loop_friendly: false
        transition_out glitch_cut | hard_cut | dim_cut | flash_cut   (default = DESIGN motion.scene.transition)
        reveal        optional per-slot override, e.g. { headline: words, setup: fade }
        timing        optional per-slot delays, e.g. { headline: { delay_frames: 6 } }
-       sfx           optional extra sounds: [{ id: riser_noise, at_s: 0.2, gain_db: -3 }]
+       sfx           optional extra sounds: [{ role: riser, at_s: 3.0 }] (kit role; at_s = when it lands: a riser peaks there) or [{ id: impact_punch, at_s: 0.2, gain_db: -3 }]
        notes         direction for humans / QA -->
 
 ### 01 · Hook

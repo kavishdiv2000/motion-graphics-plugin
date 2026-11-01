@@ -174,6 +174,7 @@ audio:
     fade_out_s: 2.5
     duck_db: 4                       # music dip under hero SFX
   sfx:
+    kit: classic                      # this example recreates the reference reel's synth sounds; new designs use a kit (launch · calm · crisp · minimal)
     gain_db: -9
     min_spacing_frames: { word_in: 3, type_char: 2, count_tick: 3 }
     map:                             # timeline event -> sound id (see sound-design skill library)

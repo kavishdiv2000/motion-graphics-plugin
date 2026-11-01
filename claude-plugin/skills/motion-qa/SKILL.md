@@ -3,7 +3,7 @@ name: motion-qa
 description: Quality-assure motion-graphics renders — automated technical checks (codec, size, fps, duration, pixel format, loudness, true peak) plus a scored visual critique of contact sheets with a professional motion-director rubric and a fix loop that maps every problem to a change in DESIGN/CHOREOGRAPHY/CONTENT. Use after building stills or rendering a video, before delivering, or when asked to review/critique a motion-graphics video.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
 ---
 
 # Motion QA
@@ -15,7 +15,8 @@ Quality comes from looking. Two layers: **machine checks** (objective, scripted)
 ```bash
 node .motion-graphics/mg.mjs validate <id>   # copy, fit, timing, contrast, claims, platform limits (errors block)
 node .motion-graphics/mg.mjs stills <id>     # build/contact-<fmt>.png: mid-reveal + landed frame per scene
-node .motion-graphics/mg.mjs qa <id>         # after render: codec h264, size, fps, yuv420p, duration, audio, -14 LUFS ±1, ≤ -1 dBTP
+node .motion-graphics/mg.mjs qa <id>         # after render: codec h264, size, fps, yuv420p, duration, audio, -14 LUFS ±1, ≤ -1 dBTP;
+                                             # kit mixes also: first sound ≤ 0.5 s, accents ≤ 13 / 10 s (music-led), no stacked accents, sync
 ```
 `qa.<fmt>.json` → `verdict: PASS | PASS_WITH_WARNINGS | FAIL`. FAIL blocks delivery.
 
@@ -36,7 +37,7 @@ Each tile is labelled `NN-mid` (mid-reveal) or `NN-land` (landed + 6 f). Score 0
 | 8 | **Copy** | each hero carries the argument; no typos; claims sourced | vague heroes, typos, unsourced stats |
 | 9 | **Mid-reveal look** | scrambles/word-ins look intentional and clean | glitches unreadable for too long, layout jumps |
 | 10 | **Ending** | CTA clear, held ≥ 2 s, logo correct | no CTA, rushed end |
-| 11 | **Sound** (listen if you can; otherwise read `cues.<fmt>.json` + loudness) | hits on lands, no machine-gun ticks, -14 LUFS | silent lands, clutter, clipping |
+| 11 | **Sound** (listen if you can; otherwise read `cues.<fmt>.json` + the `audio.*` QA lines) | accents on the reveal / logo / key actions only, music under the whole film, first sound at once, -14 LUFS | silent hero lands, a hit on every cut, clutter, clipping, dead air at the end |
 
 **Total /22.** ≥ 18 deliver · 14–17 fix the lowest items then deliver · < 14 rethink the choreography.
 Write the result as: score table → top 3 problems (using motion-craft critique vocabulary) → the exact fixes.
@@ -53,8 +54,9 @@ Write the result as: score table → top 3 problems (using motion-craft critique
 | accent on the wrong word | `emphasis: none` or move `accent: true` to the right part |
 | scramble looks noisy for too long | DESIGN `decode_scramble_frames` −1, `decode_char_stagger_frames` −0.2 |
 | everything feels slow | pacing → urgent (scene −0.6 s), stagger −1 f |
-| machine-gun ticks | DESIGN `audio.sfx.map.word_in: null` or raise `min_spacing_frames.word_in` |
-| lands feel weak | `decode_land: impact_punch` / +2 dB via `audio.sfx.gains.decode_land` |
+| machine-gun ticks / keys | kit: `audio.sfx.roles.key: { min_gap_ms: 120 }` or `events.type_char: null`; classic: `map.word_in: null` / raise `min_spacing_frames` |
+| lands feel weak | kit: `roles.hit: { bed_db: 10 }` or another voice (`sound: cut_hit/kick`); a riser into it (`sfx: [{ role: riser, at_s: <land> }]`); classic: `audio.sfx.gains.decode_land` +2 |
+| too busy (audio.accents warn) | fewer hero lands, `events.strike: null` / `events.transition: null`, or kit `calm` |
 | loudness off | `audio.music.gain_db` ±2; the master normalises, but a bed that's too loud masks the SFX |
 
 ## 4. Loop limits

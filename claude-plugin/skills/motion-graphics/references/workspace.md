@@ -16,7 +16,7 @@ The plugin never writes into its own folder; everything below lives in the user'
 │  ├─ logo.svg            referenced by DESIGN brand.logo.primary: assets/logo.svg
 │  ├─ fonts/              custom font files + metrics.json  (mg font add …)
 │  ├─ audio/              licensed music beds (16-bit 48 kHz WAV) → DESIGN audio.music.file: assets/audio/bed.wav
-│  ├─ sfx/                custom sounds <id>.wav usable in audio.sfx.map / scene sfx
+│  ├─ sfx/                custom sounds <id>.wav usable as a kit role's sound, in scene sfx, or in the classic map
 │  └─ sfx-library/        audition copy of the 50 built-in SFX (mg sfx; git-ignored)
 ├─ inbox/                 drop CONTENT.md files (or folders with CONTENT.md [+ CHOREOGRAPHY.md] [+ formats.txt]) → mg inbox
 │  └─ _ingested/          processed inbox items (renamed <session-id>--<name>)
@@ -27,7 +27,11 @@ The plugin never writes into its own folder; everything below lives in the user'
       ├─ CHOREOGRAPHY.md   per-video scene plan
       ├─ build/            spec.<fmt>.json · report.<fmt>.md · cues.<fmt>.json · mix.<fmt>.wav · contact-<fmt>.png
       │                    · qa.<fmt>.json · preview-<fmt>.mp4 · stills/<fmt>/ — all regenerable
-      └─ output/           <id>-<fmt>.mp4 · thumb-<fmt>.png · POST.md   ← what the user receives
+      ├─ output/           <id>-<fmt>.mp4 · thumb-<fmt>.png · POST.md   ← what the user receives
+      ├─ usage.json        tokens spent on this video (totals, by model, by client, by chat) — written by the usage hook
+      └─ usage.log.jsonl   one line per recorded turn
+├─ usage/                 workspace.json + workspace.log.jsonl: motion-graphics work not tied to one video (design setup)
+└─ .state/                hook bookkeeping: transcript offsets, last touched session, usage-errors.log (git-ignored)
 ```
 
 ## Session = one video
@@ -73,7 +77,19 @@ The CLI maintains it; agents may set `status` / `title` with `mg session set <id
 | `studio <ref>` | Remotion Studio preview of the session |
 | `demo` | session `demo-signal-ops` from the bundled example (uses the example design if none exists) |
 | `sfx` · `font add <file> "<Family>" <weight>` | SFX audition library · register a custom font |
+| `usage [<ref>\|--all] [--json]` | token table per session (+ workspace) |
+| `usage add <ref> --input N --output N [--cache-read N] [--cache-write N] [--model m] [--client c] [--note …]` | log tokens by hand (clients without hooks) |
+| `usage hooks install codex\|cursor\|claude` | add the recording hook to the project's `.codex/hooks.json` · `.cursor/hooks.json` · `.claude/settings.json` |
+| `usage hook <claude-code\|codex\|cursor>` | what the hooks run (reads hook JSON on stdin; silent; always exit 0) |
 `<ref>` = full id, a unique part of it, `latest`, or a path. Exit codes: 0 ok · 1 validation/QA failure · 2 usage · 3 not initialised.
+
+## Token usage ledger (motion-graphics-usage/1.0)
+`usage.log.jsonl` rows: `{ at, run, client, chat, model, input, cache_write, cache_read, output, reasoning, requests, total, source }`
+(`input` = uncached input; `output` includes reasoning; `total = input + cache_write + cache_read + output`). `usage.json` is
+recomputed from the log after every write. Attribution replays the turn: a line mentioning exactly one session id makes it
+current; each model call counts toward the current session; earlier calls go to the session this chat last worked on, else
+to `usage/` when the turn touched motion-graphics, else nowhere. The Claude plugin records automatically; other clients
+need `usage hooks install <client>` (ask the user first: it edits their project config outside `.motion-graphics/`) or `usage add`.
 
 ## Environment variables
 | Var | Effect |

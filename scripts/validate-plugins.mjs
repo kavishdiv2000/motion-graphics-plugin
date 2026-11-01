@@ -109,6 +109,21 @@ for (const a of readdirSync(join(cp, 'agents'))) {
   for (const bad of ['hooks', 'mcpServers', 'permissionMode']) if (fm && bad in fm) err(`claude-plugin/agents/${a}: "${bad}" is ignored for plugin agents`);
 }
 ok(`claude-plugin: ${readdirSync(join(cp, 'agents')).length} agents checked`);
+if (existsSync(join(cp, 'hooks', 'hooks.json'))) {
+  let hj = null;
+  try { hj = JSON.parse(readFileSync(join(cp, 'hooks', 'hooks.json'), 'utf8')); } catch (e) { err(`claude-plugin/hooks/hooks.json: invalid JSON (${e.message})`); }
+  const known = ['PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'UserPromptSubmit', 'Notification', 'Stop', 'SubagentStart', 'SubagentStop', 'SessionStart', 'SessionEnd', 'PreCompact', 'PermissionRequest'];
+  let n = 0;
+  for (const [ev, groups] of Object.entries(hj?.hooks || {})) {
+    if (!known.includes(ev)) err(`claude-plugin/hooks/hooks.json: unknown event "${ev}"`);
+    for (const g of groups) for (const h of g.hooks || []) {
+      n++;
+      const m = /\$\{CLAUDE_PLUGIN_ROOT\}\/([^"\s]+)/.exec(h.command || '');
+      if (m && !existsSync(join(cp, m[1]))) err(`claude-plugin/hooks/hooks.json: ${ev} runs ${m[1]}, which is not in the plugin`);
+    }
+  }
+  ok(`claude-plugin: ${n} hook(s) checked`);
+}
 
 console.log(errors ? `\n✖ ${errors} problem(s)` : '\n✔ both plugins valid');
 process.exit(errors ? 1 : 0);

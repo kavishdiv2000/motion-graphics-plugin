@@ -140,6 +140,7 @@ export function buildTimeline(scene, motionTokens, fps) {
       e.words = ws.map((w, i) => ({ text: w, in: Math.round(start + i * st) }));
       e.wordIn = D(m.word_in_frames);
       e.words.forEach((w) => events.push({ type: 'word_in', frame: w.in, slot: el.slot }));
+      if (e.words.length) events.push({ type: 'words_done', frame: e.words[e.words.length - 1].in + e.wordIn, slot: el.slot });
       if (el.reveal === 'strike') {
         e.strikeStart = e.end - D(m.strike_frames);
         events.push({ type: 'strike', frame: e.strikeStart, slot: el.slot });
@@ -162,7 +163,7 @@ export function buildTimeline(scene, motionTokens, fps) {
       e.typeChars = cs.length;
       e.typePer = per;
       cs.forEach((ch, i) => {
-        if (ch !== ' ') events.push({ type: 'type_char', frame: Math.round(start + i * per), slot: el.slot });
+        events.push({ type: ch === ' ' ? 'type_space' : 'type_char', frame: Math.round(start + i * per), slot: el.slot });
       });
       events.push({ type: 'type_done', frame: e.end, slot: el.slot });
     } else if (el.reveal === 'count') {

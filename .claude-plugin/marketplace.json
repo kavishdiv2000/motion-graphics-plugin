@@ -12,7 +12,7 @@
       "name": "motion-graphics",
       "source": "./claude-plugin",
       "description": "Generate professional motion-graphics videos from DESIGN.md + CHOREOGRAPHY.md + CONTENT.md, with scheduled batch production.",
-      "version": "1.1.0",
+      "version": "1.4.0",
       "category": "productivity"
     }
   ]

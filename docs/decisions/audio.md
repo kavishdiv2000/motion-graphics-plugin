@@ -1,4 +1,41 @@
-# Decision: procedural audio, timeline-driven
+# Decision: timeline-driven audio — sound kits (earshot) by default, procedural synthesis as classic
+
+## 1.4: drum-free, and a professional default kit (`studio`)
+Listening to 1.3 renders, the user heard unwanted drums. Two causes, both confirmed by measurement: the synth beds'
+drum layers (16th hat ticks above energy 0.6, a kick in pulse_minimal, a heartbeat in dark_tension) and kick-like kit
+members (earshot's `cut_hit/punch` hero hit and `cut_hit/kick` drop, `pro_pop_in` thumps, finger taps on wood).
+Fix: beds play without drums in kit mode (`music.percussion: true` restores them), every kit member whose attack
+(first 120 ms after onset) has > 30 % of its energy under 150 Hz was replaced by a clean equivalent or switched off, and
+a new curated default `studio` uses real CC0 recordings, tonal pops and a key-tuned struck tine for hero lands. Kit
+definitions live in `scripts/sfx-kits/` (earshot kit format) and every shipped take is re-measured after each build.
+
+## 1.3: sound kits from earshot
+The 1.0–1.2 engine placed every sound file's **start** on its cue frame at a fixed level and ducked the music after hero
+hits. Measured against professional launch films that is inaccurate in three ways: a whoosh's loudest moment arrived
+~0.1–0.2 s late, effects ignored how loud the music was at that moment, and the music ducked *after* hits instead of
+making room *before* them. [earshot](https://github.com/Leonxlnx/earshot) (MIT) measured those rules and ships sounds
+built for them, so 1.3 ports its kit system:
+
+| | Classic (≤ 1.2) | Kits (1.3) |
+|---|---|---|
+| sounds | 50 Node synth recipes | 43 earshot sounds, 127 audited takes in 5 drum-free kits (designed in code, or CC0 recordings fitted as code), 16-bit WAV in `engine/sfx-pack/` (~10 MB) |
+| placement | file start on the frame | measured onset / peak / end (earshot's definitions; JS port matches earshot to < 1 ms) + per-role offsets (−60…+42 ms) |
+| level | fixed dB per event | loudest 50 ms set `bed_db` (3–10 dB) over the music's median level in the second before the cue |
+| runs | frame throttles | per-role minimum gaps (66–159 ms), take rotation, ±1 dB / ±3 ms humanising |
+| tonal | fixed pitch | text / bell notes tuned into the music's key |
+| music | ducked after hero hits | stop-down: −9 dB for 0.4 s before hits, back on the hit |
+| QA | loudness, true peak | + first sound ≤ 0.5 s, accents per 10 s, stacked accents, true peak after AAC |
+
+Why pre-rendered WAVs rather than earshot itself: earshot is Python + PyTorch (1.1 GB of models for its listening
+tools). Its sound bank renders with numpy / scipy only, so `scripts/build-sfx-pack.py` renders the four kit presets once
+with earshot's own renderer and audit; users and agents need only Node. Rejected: porting earshot's recipes to JS (large,
+fragile), requiring earshot at runtime (breaks the Node-only install), FLAC + ffmpeg decode (halves the size, adds a
+moving part). Classic mode is kept byte-identical for existing designs and the Signal Ops example.
+
+Not adopted (yet): earshot's listening / critique models (an optional QA step if earshot is installed is a natural next
+step), its per-film `fit` of real recordings, and its `real-sound` licensed-recording workflow.
+
+# Classic: procedural audio, timeline-driven
 
 ## Options considered
 | Option | Determinism | Cost | Quality | Sync | Licensing | Verdict |

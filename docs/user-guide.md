@@ -53,7 +53,9 @@ Talk in creative terms; the agent maps your request to the markdown:
 | "Make the third scene hit harder." | the session's emphasis colour, `decode_land` sound, hold time |
 | "Slower, more premium." | pace → contemplative; DESIGN motion preset (asks first: DESIGN affects every video) |
 | "LEVERAGE should be orange." | scene `emphasis: accent_orange` |
-| "Too many clicks." | `audio.sfx.map.word_in: null` (brand-wide, so it asks) |
+| "Too many clicks." | `audio.sfx.events.type_char: null` or `roles.tick: null`, or `kit: calm` (brand-wide, so it asks) |
+| "Make the reveal hit harder." | a riser into it: scene `sfx: [{ role: riser, at_s: <land time> }]` (this video only) |
+| "Different sound style." | `audio.sfx.kit: launch / calm / crisp / minimal`; audition first with `mg sfx --kit <name>` |
 | "Shorter." | merges or cuts beats; pace → urgent |
 
 ## 5. Chat mode (ChatGPT, claude.ai chat)
@@ -69,11 +71,19 @@ node .motion-graphics/mg.mjs make <session-id>          (DESIGN.md goes in .moti
 Drop `CONTENT.md` files (or folders with CONTENT.md + optional CHOREOGRAPHY.md + `formats.txt`) into `.motion-graphics/inbox/`
 and run `/motion-graphics:batch-videos`, or schedule it. See [scheduling.md](scheduling.md).
 
-## 7. Handy commands
+## 7. Token usage
+Each session folder has `usage.json` (+ `usage.log.jsonl`): the tokens the agent spent on that video, by model and chat.
+Claude Code with the Claude plugin records it automatically. Codex and Cursor: run
+`node .motion-graphics/mg.mjs usage hooks install codex` (or `cursor`) once in the project. Copilot and chat UIs don't
+expose token counts, so add them by hand: `mg usage add <session> --input N --output N --model <m> --client copilot`.
+`node .motion-graphics/mg.mjs usage` shows the table. Details: README → Token usage per video.
+
+## 8. Handy commands
 ```
 node .motion-graphics/mg.mjs status            design + all sessions
 node .motion-graphics/mg.mjs session show latest
 node .motion-graphics/mg.mjs make <session> --formats vertical,square
+node .motion-graphics/mg.mjs usage             tokens per video
 node .motion-graphics/mg.mjs doctor            environment check
 node .motion-graphics/mg.mjs help
 ```

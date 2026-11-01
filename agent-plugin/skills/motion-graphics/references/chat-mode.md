@@ -41,7 +41,7 @@ Check and report each line as ✔/✖ before declaring the files final:
 - [ ] last scene is an `endcard` with a CTA
 - [ ] no characters outside basic Latin + `▸ //` in on-screen copy (no →, smart quotes, emoji)
 - [ ] every `statistic` claim has a `source`
-- [ ] every `audio.sfx.map` id exists in the sound-design catalogue
+- [ ] `audio.sfx.kit` is launch / calm / crisp / minimal / none (or `classic` with every `audio.sfx.map` id in the sound-design catalogue); role / event overrides use names from sound-design `references/kits.md`
 - [ ] YAML is valid: front matter between `---` lines, one ```yaml block per scene/beat, each with `id:`
 
 ## 6. Hand-over

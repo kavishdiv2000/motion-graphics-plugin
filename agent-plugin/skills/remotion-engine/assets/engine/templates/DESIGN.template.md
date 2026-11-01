@@ -165,27 +165,15 @@ audio:                                # ASK: Sound? → music + SFX (default) ·
     key: A
     scale: minor                      # minor | major | dorian | phrygian
     gain_db: -17
-    fade_in_s: 0.8
-    fade_out_s: 2.5
-    duck_db: 4
+    fade_in_s: 0.1                    # start at once: pro films make their first sound within 0.5 s
+    fade_out_s: 0.6                   # short ending; the logo hit rings out over it
+    percussion: false                 # the synth beds' drum layers (hat ticks, kick, heartbeat). Off = pad + arp + drone only
+    stop_down: auto                   # auto (the kit's rule: music steps down briefly before big moments, back ON them) | off | { depth_db: 6, length_s: 0.3 }
   sfx:
-    gain_db: -9
-    min_spacing_frames: { word_in: 3, type_char: 2, count_tick: 3 }
-    map:                              # event -> SFX id (sound-design skill has all 50 ids). null = silent
-      scene_in: null
-      label_in: tick_hi
-      word_in: key_soft
-      decode_start: data_chirp
-      decode_land: impact_punch
-      decode_land_minor: tick_hi
-      type_char: key_click
-      type_done: confirm_blip
-      count_tick: counter_tick
-      count_land: impact_punch
-      strike: swipe_air
-      logo_in: stinger_logo
-      exit: null
-      transition: whoosh_short
+    kit: studio                       # ASK: Sound style? studio (clean, professional, default) · launch (music-led, stop-downs) · calm (soft, text-led) · crisp (energetic product / dev tool) · minimal (effects only, no music) · none · classic (legacy synth map)
+    trim_db: 0                        # the whole effects layer up / down
+    roles: {}                         # optional voice / placement overrides, e.g. { hit: { sound: cut_hit/kick }, text: null }
+    events: {}                        # optional event → role overrides, e.g. { word_in: tick, count_land: hit }   (null = silent)
   master: { lufs_target: -14, true_peak_db: -1.0 }
   voiceover: { enabled: false, provider: null }
 

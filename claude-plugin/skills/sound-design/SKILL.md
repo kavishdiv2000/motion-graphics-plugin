@@ -1,98 +1,113 @@
 ---
 name: sound-design
-description: Sound design for motion graphics — the 50-sound procedural SFX library (clicks, ticks, keys, glitches, whooshes, risers, impacts, stingers, room tones), music-bed presets, mapping animation events to sounds, beat-sync, ducking, loudness mastering (-14 LUFS), recreating a reference video's audio, and adding licensed or AI-generated sounds. Use when choosing, generating, mixing or debugging audio for a motion-graphics video.
+description: Sound design for motion graphics — drum-free sound kits (studio, launch, calm, crisp, minimal) of designed and CC0-fitted effects placed by measured sync points and levelled against the music, music-bed presets, mapping animation events to sound roles, stop-downs, risers into reveals, loudness mastering (-14 LUFS), the 50-sound classic synth library, recreating a reference video's audio, and adding licensed or AI-generated sounds. Use when choosing, mixing or debugging audio for a motion-graphics video.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
 ---
 
 # Sound design for motion graphics
 
-Sound is half of perceived quality. In this pipeline audio is **synthesised from code** and
-**driven by the same timeline as the picture** (`src/lib/timeline.js` events → `scripts/lib/mix.mjs`),
-so every word, decode, land and cut has a sound on the exact frame, and the result is deterministic and royalty-free.
+Sound is half of perceived quality. Audio here is **driven by the same timeline as the picture** (`src/lib/timeline.js`
+events → `scripts/lib/mix.mjs`), deterministic, and needs no network or licence at render time.
 
-- Full catalogue with the synthesis code of every sound: `references/sfx-catalogue.md`
-- Reverse-engineering a reference video's audio (worked on the demo reel): `references/recreate-reference-audio.md`
-- Audition: `node .motion-graphics/mg.mjs sfx` → `.motion-graphics/assets/sfx-library/_reel.wav` and `INDEX.md`
+Two ways to sound a video (DESIGN.md `audio.sfx.kit`):
 
-## 1. The layers of a social motion-graphics mix
-| Layer | Level (relative) | Role |
+| Mode | What | When |
 |---|---|---|
-| Music bed | −17 dB, ducked −4 dB under hero hits | tempo, mood, glue |
-| Hero hits (decode_land, count_land, logo) | 0 dB | "it landed": the felt punctuation |
-| Reveal textures (decode_start chatter, transitions) | −5 to −6 dB | motion you can hear |
-| Micro events (word_in, type_char, count_tick) | −9 to −11 dB, ±1.5 dB humanised, throttled | life and detail; must never become a machine gun |
-| Room tone / hiss (optional) | −30 dB | avoids digital silence |
-Master: integrated **−14 LUFS**, true peak **≤ −1 dBTP** (YouTube/Spotify/TikTok-friendly normalisation).
+| **Kit** (`studio` · `launch` · `calm` · `crisp` · `minimal`) — default `studio` | one sound per **role** (hit, whoosh, key, tick, text…) from a pack of 43 sounds / 127 takes made by [earshot](https://github.com/Leonxlnx/earshot) (designed in code, plus CC0 recordings fitted as code), each placed by its **measured** sync point and levelled **over the music** | every new design |
+| `classic` | the 50 synthesised sounds of `references/sfx-catalogue.md`, mapped event → sound id at fixed levels | the bundled Signal Ops example (it recreates the reference reel); designs written before 1.3 |
+| `none` | no effects (music only, or silence with `music.source: none`) | captions-first platforms |
 
-## 2. Event → sound map (set in DESIGN.md `audio.sfx.map`)
-| Event | Fires when | Signal Ops default | Alternatives |
-|---|---|---|---|
-| `label_in` | the tag glitches in | `glitch_tick` | tick_hi, relay_click, blip_up |
-| `word_in` | each word of a setup/tail appears | `key_soft` | click_soft, tap_wood, null for calm brands |
-| `decode_start` | a hero starts scrambling | `scramble_chatter` | data_chirp, modem_burst |
-| `decode_land` (hero) | the hero locks | `impact_sub` | impact_punch, thud_soft, hit_metallic, boom_cinematic (once per video) |
-| `decode_land_minor` | a non-hero decode locks | `tick_hi` | double_tick |
-| `type_char` / `type_done` | typewriter char / finished | `key_click` / `confirm_blip` | mouse_click / chime_confirm |
-| `count_tick` / `count_land` | counter steps / final number | `counter_tick` / `impact_punch` | blip_up / slam_gate |
-| `strike` | strike-through draws | `swipe_air` | toggle_off, error_buzz |
-| `logo_in` | endcard logo | `stinger_logo` | bell_soft, slam_gate |
-| `exit` | scene starts dimming | `signal_drop` | null, downlifter |
-| `transition` | glitch/flash cut | `static_burst` | rgb_tear, whoosh_short, crt_off |
-Extra one-off sounds per scene: `sfx: [{ id: riser_noise, at_s: 2.0, gain_db: -4 }]` in CHOREOGRAPHY.md.
-For a riser into a hero, start it `riser length` seconds before the land (risers are 2.0 s).
+References: `references/kits.md` (every kit, role, sound and number; generated) · `references/sfx-catalogue.md` (classic
+synth sounds) · `references/recreate-reference-audio.md` (reverse-engineering a reference video's audio).
 
-## 3. How each family is synthesised (to design new sounds)
-All recipes combine a few primitives from `scripts/lib/dsp.mjs`: oscillators (sine/saw/square/tri, FM), seeded noise
-(white/pink/brown), biquad filters (static or swept), exponential/ADSR envelopes, waveshaping (`drive`), bit-crushing,
-gating (`chop`), Karplus-Strong `pluck`, `echo` and `reverb`.
+## 1. Choose a kit (ask: "What should it sound like?")
+**Every kit is drum-free**: no kicks, low thumps, sub drops or noise hats (each short sound keeps < 30 % of its energy
+under 150 Hz), and the synth music beds play without their drum layers unless `audio.music.percussion: true`.
 
-- **Clicks and ticks (12)**: a 2–6 ms band-passed noise burst (2–8 kHz, Q 1–4) for the "contact", plus an optional
-  pitched blip (800–6000 Hz, 3–10 ms decay) for the "material". Higher band and shorter decay sound harder and smaller.
-  Lower band, pink noise and longer decay sound softer and woodier. Mechanical keys: a sharp high click, then a duller
-  "bottom-out" 10–15 ms later.
-- **Data / digital (10)**: square-wave blips with exponential pitch glides (up = positive, down = negative); chirp bursts
-  are 8–20 tiny seeded random-pitch blips; FSK modem = a square wave switching between 1200 and 2200 Hz.
-- **Glitch / signal (8)**: noise and tones through a `bitcrush` (4–6 bits, 6–11 kHz sample-hold) and `chop` (gating at
-  20–40 Hz); CRT on = a low thunk plus a rising 15 kHz whine; signal drop = noise through a low-pass sweeping down.
-- **Transitions (7)**: pink noise through a band-pass whose centre sweeps (whoosh), amplitude shaped by sin²;
-  risers = noise or detuned saws with exponentially rising cutoff/pitch and amplitude p²; reverse swell = a reverb tail played backwards.
-- **Impacts (6)**: a sine with a fast pitch drop (e.g. 115 → 45 Hz in 40 ms), slightly driven, plus a click transient for
-  definition. Cinematic = add brown noise low-passed at 300 Hz plus a long reverb. Metallic = inharmonic partials (×1, 2.76, 5.4, 8.93).
-  Gated slam = a punch plus a reverb tail cut off after ~35 %.
-- **Musical / brand (4)**: FM bells/chimes (ratio 1.4–3.5, decaying index), Karplus-Strong plucks in the bed's key,
-  and the logo stinger = a sub hit plus a minor-chord pluck strum (18 ms apart), a noise shimmer and reverb.
-- **Beds / texture (3)**: brown-noise room tone (LP 500 Hz), pink-noise tape hiss (BP 6 kHz), CRT hum (50/100/150 Hz + 15.7 kHz).
+| Kit | Character | Music |
+|---|---|---|
+| `studio` | **the professional default**: real CC0 recordings (keys, clicks, a bamboo touch, a soft swish), rounded tonal pops, a warm struck tine for hero lands tuned into the key, air risers and breath swells; gentle music stop-downs only before big transitions | yes |
+| `launch` | soft, short, mid-register touches over a music bed; music steps down before hits (modern SaaS / AI launch films) | yes (default) |
+| `calm` | soft natural touches, one tuned kalimba voice for text and bells, gentle air for moves | yes (warm_keys) |
+| `crisp` | tight UI ticks and clicks, fast air, one clean gated hit, a short tuned sub drop (dev tools, product) | yes (pulse_minimal) |
+| `minimal` | airy digital ticks, sub swells, sub-led hit (effects-led films) | none |
+Audition before choosing: `node .motion-graphics/mg.mjs sfx --kit <name>` → `assets/sfx-library/kit-<name>.wav`
+(every role in order). List: `mg sfx kits`.
 
-To add a sound: add an entry to `SFX` in `scripts/lib/sfx.mjs` (`cat, desc, use, make: (sr) => Float32Array | [L,R]`),
-use only seeded noise, normalise the peak (−1 to −6 dB), `node scripts/sfx-library.mjs --only my_id` (in the plugin's engine source), listen, then regenerate the
-catalogue: `node scripts/sfx-docs.mjs <skill>/references/sfx-catalogue.md`.
+## 2. Events → roles
+The timeline fires events; the kit decides which role sounds them (full table in `references/kits.md`):
+hero `decode_land` → **hit** (studio: a tuned tine) · minor decode → **land.light** · `label_in` / `count_tick` → **tick** · `decode_start` → **tick.crisp**
+· a words line resolves (`words_done`) → **text** (ONE tuned note per line, not per word) · `type_char` → **key** (6 takes,
+±3 ms humanised), `type_space` → **key.space**, `type_done` → **click.confirm** · `count_land` → **land** · `fade_in` → **pop**
+· glitch/flash cut → **whoosh.short** (peak on the cut) · `logo_in` → **hit** · `word_in`, `scene_in`, `exit` → silent.
+Change it in DESIGN.md: `audio.sfx.events: { word_in: tick, count_land: hit }` (null = silent);
+swap a voice: `audio.sfx.roles: { hit: { sound: cut_hit/kick }, text: null }` (a pack id, a classic synth id, or a custom `.wav` id).
 
-## 4. Music beds (`audio.music.preset`)
+## 3. What the engine does for you (don't redo it by hand)
+- **Placement by measured sync point.** Each take carries its onset (attack), peak (loudest 5 ms) and end, measured with
+  earshot's definitions. Taps / knocks / clicks are placed on their attack and **lead** the frame (−11 to −60 ms);
+  pop-in thumps, whoosh and swell **peaks** land just after the cut (+30 to +42 ms); risers peak into the hit (−23 ms).
+- **Levels over the music.** With music, each effect's loudest 50 ms sits `bed_db` (3–10 dB) over the music's median
+  level in the second before it — audible over loud passages, never jumping out of quiet ones. Without music, fixed role levels.
+- **Runs.** Rapid repeats keep a minimum gap (ticks 66 ms, keys 87 ms, pops 114 ms); closer ones are skipped.
+  Consecutive events cycle through different takes (no machine-gun repeats) with ±1 dB variation.
+- **Tuning.** Tonal roles (text, bell) are pitched into the music's key (C-major pentatonic moved to the key's major / relative major).
+- **Stop-down, not ducking**: launch steps the music down ~9 dB for 0.4 s before a hit / whoosh.long / swell; studio only
+  ~6 dB for 0.3 s before big transitions (whoosh.long, swell). The music comes back **on** the moment. `audio.music.stop_down: off | { depth_db, length_s }`.
+- **One accent at a time.** Two of hit / drop / swell / whoosh.long within 3 frames: the lower-priority one is removed
+  (a riser ending on a hit is a lead-in, not a stack, and is kept).
+- **Mastering.** −14 LUFS integrated, ≤ −1 dBTP *after AAC encoding* (0.5 dB codec headroom on kit mixes).
+
+## 4. What professional launch films do (earshot's measured playbook, 7 reference films)
+1. **Music leads**: music under (nearly) the whole film. **Start at once**: first sound within 0.04–0.48 s, no silent cold open.
+2. **Accents with priority**: the reveal, the logo, the key UI action, section changes. **Not a hit on every cut**:
+   dense music covers small motion. Music-led films: about **3–13 designed accents per 10 s**.
+3. **Riser → stop-down → impact** for the big reveal, once or twice per film: `sfx: [{ role: riser, at_s: <hero time> }]`
+   in that scene of CHOREOGRAPHY.md (`at_s` = when it should land; the engine starts it early enough).
+4. **Land the ending**: the end card sits at body level; short fade (median 0.27 s); the logo hit rings out. No dead air.
+5. **UI foley**: one click per on-screen click on the press frame; typing from multiple takes, slightly irregular.
+6. **Web master**: about −14 LUFS, true peak ≤ −1 dBTP on the delivered file.
+7. **Real recordings and produced music beat synthesis.** The kits cover the effects; the synth music beds are the
+   weakest link of a premium film: for hero work set `music.source: file` with a licensed track (see §7).
+`mg qa` checks first sound, accent density, stacking and loudness / true peak on every render.
+
+## 5. Scene extras (CHOREOGRAPHY.md)
+```yaml
+sfx: [{ role: riser, at_s: 3.03 }, { role: bell, at_s: 1.2, note: E5 }, { role: swell, at_s: 0 }, { id: impact_punch, at_s: 2.0, gain_db: -3 }]
+```
+`role` uses the kit's voice and placement; `id` plays a specific sound (pack id, synth id or custom `.wav`). `note`
+pitches tonal roles. `at_s` is seconds from the scene start to the landing point.
+
+## 6. Music beds (`audio.music.preset`, synthesised)
 | Preset | Layers | BPM | Mood / use |
 |---|---|---|---|
-| `signal_drone` | sub drone (root, 2nd harmonic), breathing saw pad, Karplus-Strong arp on chord tones (8ths), 16th ticks at high energy | 95–105 | dark, technical, thought leadership (**the demo**) |
-| `pulse_minimal` | 16th square bass pulse, light pad, sparse arp, ticks, kick at energy peaks | 110–124 | product launches, SaaS, announcements |
-| `warm_keys` | soft triangle pad chords, sparse plucks, no percussion | 80–96 | human, calm, services, healthcare |
-| `dark_tension` | low drone, heartbeat pulse, noise swells into each cut | 80–95 | problem/agitate hooks, warnings |
-Chord progression per scale: minor i–VI–III–VII, major I–V–vi–IV, every 2 bars. **Energy** per scene (choreography
-`music.energy_curve`) thins or thickens the arp and enables ticks (> 0.6) and the kick (> 0.75).
-Licensed track instead: `music.source: file` with a 16-bit 48 kHz WAV in `.motion-graphics/assets/audio/` and `file: assets/audio/<name>.wav` (loops if shorter).
+| `signal_drone` | sub drone, breathing saw pad, Karplus-Strong arp on chord tones (+ 16th hat ticks when `percussion: true`) | 95–105 | dark, technical |
+| `pulse_minimal` | 16th square bass pulse, light pad, sparse arp (+ ticks and a kick at energy peaks with `percussion: true`) | 110–124 | product launches, SaaS |
+| `warm_keys` | soft triangle pad chords, sparse plucks, no percussion | 80–96 | human, calm, services |
+| `dark_tension` | low drone, noise swells into each cut (+ heartbeat pulse with `percussion: true`) | 80–95 | problem/agitate hooks |
+Chords per scale: minor i–VI–III–VII, major I–V–vi–IV, every 2 bars. Scene energy (`music.energy_curve`) thins or
+thickens the arp, ticks (> 0.6) and kick (> 0.75). Licensed track: `music.source: file`, a 16-bit 48 kHz WAV in
+`.motion-graphics/assets/audio/`, `file: assets/audio/<name>.wav` (loops if shorter); kits level against it the same way.
 
-## 5. Mixing rules
-1. One hero hit per scene. If two land within 300 ms, keep the bigger one.
-2. Duck the bed −3 to −6 dB under hero hits (10 ms attack, 450 ms release); the engine does this automatically.
-3. Throttle repeats: word_in ≥ 3 frames apart, type_char ≥ 2, count_tick ≥ 3. Humanise ±1.5 dB.
-4. Low end belongs to one thing at a time: the sub hit *or* the drone. Ducking clears room for the hit; if you add a licensed bed, high-pass it around 40 Hz.
-5. Leave the final 2 s for the stinger tail and the music fade-out.
-6. Deliver at 48 kHz, AAC 320 kbps, −14 LUFS, ≤ −1 dBTP. `mg qa` verifies this.
+## 7. Licensed, AI or recorded sounds
+Save a sound once as `.motion-graphics/assets/sfx/<id>.wav` (16-bit, 48 kHz) and use `<id>` as a role's `sound`
+(its sync points are measured automatically) or in a scene `sfx`. Never call a generation API at render time.
+Licences for ads: only CC0, Public Domain Mark or CC BY (credit it in POST.md); never NC, ND, SA or Sampling+ — syncing a
+recording to video legally counts as an adaptation. Record source and licence in `.motion-graphics/assets/sfx/LICENSES.md`.
 
-## 6. Silence and restraint
-Platforms autoplay muted, so the video must work silent. The sound is the reward for unmuting, not a crutch.
-Calm brands: set `word_in: null`, use `thud_soft` for lands, `warm_keys` bed. Leave one scene without SFX before
-the payoff to make the payoff hit harder.
+## 8. Classic mode (`kit: classic`)
+The 50 synthesised sounds (`references/sfx-catalogue.md`), mapped in DESIGN.md `audio.sfx.map` (event → id, null = silent),
+at `audio.sfx.gain_db` (−9) plus per-event offsets; throttled by `min_spacing_frames`; music ducked `duck_db` under hero
+hits. Files start on the cue frame (no sync-point placement). Signal Ops defaults: label_in `glitch_tick`, word_in
+`key_soft`, decode_start `scramble_chatter`, decode_land `impact_sub`, minor `tick_hi`, type `key_click`/`confirm_blip`,
+count `counter_tick`/`impact_punch`, strike `swipe_air`, logo `stinger_logo`, exit `signal_drop`, transition `static_burst`.
+Synthesis families (to design new ones): clicks/ticks = 2–6 ms band-passed noise + optional pitched blip; data = square
+blips with pitch glides; glitch = bit-crush + gating; transitions = swept band-pass noise, risers with rising cutoff;
+impacts = a sine with a fast pitch drop + click; musical = FM bells and Karplus-Strong plucks. Add one in
+`scripts/lib/sfx.mjs` (seeded noise only, peak −1 to −6 dB) and regenerate the catalogue (`node scripts/sync-plugins.mjs`).
 
-## 7. AI and licensed sounds (optional)
-Generate or buy a sound **once**, save it as `.motion-graphics/assets/sfx/<id>.wav` (16-bit, 48 kHz), and reference `<id>` like a
-built-in. Never call a generation API at render time. Record the source and licence in `.motion-graphics/assets/sfx/LICENSES.md`.
+## 9. Silence and restraint
+Platforms autoplay muted: the video must work silent; sound is the reward for unmuting. Leave a breath (a stop-down or
+a scene without accents) before the payoff. More sounds is not better.

@@ -3,7 +3,7 @@ name: motion-graphics
 description: Generate production-quality motion-graphics videos for social media (kinetic typography, reels, shorts, explainers, ads) from three markdown inputs — DESIGN.md (static brand motion system), CHOREOGRAPHY.md (scene flow) and CONTENT.md (copy). Manages a .motion-graphics/ folder in the user's workspace (one session folder per video) when tools are available, or runs the whole intake inside the chat when they are not. Use whenever the user asks to make, render, design, storyboard, animate or batch-produce a motion-graphics / social video, or to set up the motion-graphics pipeline. This is the entry point; it orchestrates the other motion skills.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
   pipeline: design.md + choreography.md + content.md -> spec.json -> Remotion -> MP4
 ---
 
@@ -65,7 +65,10 @@ Rules: never write user files anywhere else; never edit `.engine/` or `mg.mjs`; 
    - The workspace root is the project/working directory the user opened, **not** the plugin folder (the script refuses that).
 3. Needs Node ≥ 18.18 (20+ recommended) and network for `npm install` the first time. On OneDrive/Dropbox the script
    warns: suggest `MOTION_GRAPHICS_ENGINE_DIR` outside the synced folder.
-4. Smoke test (optional, first time): `node .motion-graphics/mg.mjs demo` then `node .motion-graphics/mg.mjs stills demo` and
+4. Token logging: Claude Code with the Claude plugin records tokens per session automatically. On Codex or Cursor,
+   offer once: "Log the tokens each video uses? It adds a hook to .codex/ (or .cursor/) in this project", and on yes run
+   `node .motion-graphics/mg.mjs usage hooks install codex|cursor`. Copilot and other clients can't report tokens, so skip it there.
+5. Smoke test (optional, first time): `node .motion-graphics/mg.mjs demo` then `node .motion-graphics/mg.mjs stills demo` and
    **look at** `.motion-graphics/sessions/demo-signal-ops/build/contact-vertical.png`.
 
 ## W2 — DESIGN.md (static; skip when `.motion-graphics/DESIGN.md` exists and the user didn't ask to change it)
@@ -117,7 +120,7 @@ QA FAIL → fix → re-run. For important deliveries get an independent review (
 
 ## W9 — Deliver
 Point the user to `sessions/<id>/output/` (MP4s, thumbnail, POST.md), summarise the creative choices in 2–4 lines,
-give the post copy and the QA verdict, and offer one next step (another format, a 15 s cut, a hook variant).
+give the post copy and the QA verdict, the tokens used so far if recorded (`node .motion-graphics/mg.mjs usage <id>`), and offer one next step (another format, a 15 s cut, a hook variant).
 If the engine can't do something, extend it per **remotion-engine** → "Adding a template" (in the plugin's source, not in `.engine/`).
 
 ## Unattended / scheduled runs

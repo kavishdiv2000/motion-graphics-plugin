@@ -13,6 +13,7 @@ motion-graphics-plugin/
 ├─ .claude-plugin/marketplace.json   Claude Code marketplace → ./claude-plugin
 ├─ .agents/plugins/marketplace.json  Codex/ChatGPT repo marketplace → ./agent-plugin
 ├─ scripts/build.sh  scripts/install-local.sh  scripts/sync-plugins.mjs  scripts/validate-plugins.mjs
+├─ scripts/build-sfx-pack.py         (dev only) regenerate engine/sfx-pack/ from earshot
 ├─ build/                            (generated, git-ignored) packaged folders, zips, local marketplaces, INSTALL.md
 └─ docs/
 ```
@@ -37,11 +38,22 @@ motion-graphics-plugin/
 | new texture layer | `components/Texture.tsx` + DESIGN `texture.*` + parameters.md |
 | new SFX | `scripts/lib/sfx.mjs` entry → `node scripts/sfx-library.mjs --only id --out /tmp/sfx` → `node scripts/sync-plugins.mjs` (regenerates the catalogue) |
 | new music preset | `scripts/lib/music.mjs → PRESETS` + sound-design table |
+| sound kits / pack | `scripts/lib/kits.mjs` (events → roles, placement, levels, stop-down); the sounds in `sfx-pack/` come from earshot — regenerate below, then `node scripts/sync-plugins.mjs` (rewrites `sound-design/references/kits.md`) |
 | new validation rule | `scripts/lib/compile.mjs` (issue code, message, **fix** text) |
 | new bundled font | `npm i @fontsource/x` in the engine source, import in `src/fonts.ts`, `node scripts/font-metrics.mjs` (brand fonts per workspace: `mg font add`) |
 
 Rules: keep the determinism contract (remotion-engine skill); every validation issue must say how to fix it;
 every new capability gets documented in the skill a model would read at that step.
+
+## Regenerating the SFX pack (earshot)
+Users never need this. When earshot ships better sounds or kits:
+```bash
+python3 -m venv .venv && .venv/bin/pip install numpy scipy soundfile soxr     # no torch needed for the sound bank
+git clone https://github.com/Leonxlnx/earshot /tmp/earshot
+.venv/bin/python -I scripts/build-sfx-pack.py --earshot /tmp/earshot           # ~4 min: renders + audits 4 kits, curates ~140 takes
+node scripts/sync-plugins.mjs                                                 # kits.md + mirror to claude-plugin
+```
+Then build a session with each kit, run QA, listen to `mg sfx --kit <name>`, and bump the engine version.
 
 ## Upgrading Remotion
 `npx remotion upgrade` in the dev engine → re-pin exact versions (≥ 2 weeks old) → render the demo session in a scratch workspace and compare the

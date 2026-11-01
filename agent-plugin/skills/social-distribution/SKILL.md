@@ -3,7 +3,7 @@ name: social-distribution
 description: Platform specs, aspect-ratio variants, captions/post copy, thumbnails and funnel-objective mapping for motion-graphics videos on TikTok, Instagram Reels/Stories/Feed, YouTube Shorts/long-form, LinkedIn and X. Use when deciding formats and lengths for a motion-graphics video, writing the caption/first comment/hashtags, choosing CTAs by funnel stage, or packaging deliverables for publishing.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
 ---
 
 # Social distribution

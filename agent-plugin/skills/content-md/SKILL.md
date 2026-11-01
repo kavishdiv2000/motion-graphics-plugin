@@ -3,7 +3,7 @@ name: content-md
 description: Collect, normalise and validate CONTENT.md, the per-video copy for the motion-graphics pipeline (audience, core message, beats with on-screen text, claims, CTA, post copy). Use when the user uploads content, pastes a script/post/notes to turn into a motion-graphics video, or when content is missing and must be requested.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
   schema: motion-content/1.0
 ---
 

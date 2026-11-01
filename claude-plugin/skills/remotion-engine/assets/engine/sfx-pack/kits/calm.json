@@ -1,0 +1,213 @@
+{
+ "schema": "motion-graphics-kit/1",
+ "name": "calm",
+ "note": "The default for text-led films: soft natural touches, one tuned voice for bells and text, gentle air for moves, a single struck note for the lockup. Clicks, ticks, the pop, the snap, the space bar and the short whoosh are CC0 recordings fitted as code, where they measure closer to their role than the forge member (earshot match against the role's description and against synth-blip descriptions, earshot realness); the other touches are forge taps, the tuned voice is the launch film's measured kalimba. Every take passes the model-free audit (earshot kit check). Riser, swell, suck and drop are off: a reveal resolves on one element. Drum-free edition: kick, thump and sub-drop members replaced by clean equivalents (motion-graphics plugin 1.4).",
+ "source": "earshot kit preset \"calm\" (earshot 0.4.0, bank forge_v2r6+forge04r1+fit1+pluck1)",
+ "mix": {
+  "level": "auto"
+ },
+ "roles": {
+  "tick": {
+   "sound": "fit/tick/domino",
+   "align": "onset",
+   "level_db": -5.0,
+   "note": "domino pieces knocking, a CC0 recording fitted as code (0.14 s): matches 'a soft quiet UI tick' at z +1.02, p 0.67 over synth-blip descriptions (tap/glass: -0.08, p 0.01), realness 0.83 (0.45); level +3 dB for its lower loudness at the same peak",
+   "takes": [
+    "takes/fit__tick__domino_1.wav",
+    "takes/fit__tick__domino_2.wav",
+    "takes/fit__tick__domino_3.wav"
+   ]
+  },
+  "tick.crisp": {
+   "sound": "pro_click/soft",
+   "align": "onset",
+   "level_db": -8.0,
+   "note": "(drum-free) pro_click/soft; was pro_tap/glass",
+   "takes": [
+    "takes/pro_click__soft_1.wav",
+    "takes/pro_click__soft_2.wav",
+    "takes/pro_click__soft_3.wav"
+   ]
+  },
+  "tock": {
+   "sound": "knock/wood",
+   "align": "onset",
+   "level_db": -6.0,
+   "note": "(drum-free) knock/wood; was tap/knuckle",
+   "takes": [
+    "takes/knock__wood_1.wav",
+    "takes/knock__wood_2.wav",
+    "takes/knock__wood_3.wav"
+   ]
+  },
+  "hit": {
+   "sound": "notify/m0",
+   "align": "onset",
+   "level_db": -3.0,
+   "note": "the lockup as one struck bell (C5 until edits.pitch or a retune moves it) (single attack, no build, 1.9 s natural decay): a soft tonal resolve instead of a boom; set edits.pitch to the film's root",
+   "takes": [
+    "takes/notify__m0_1.wav",
+    "takes/notify__m0_2.wav"
+   ]
+  },
+  "land": {
+   "sound": "ui_pop/soft",
+   "align": "onset",
+   "level_db": -5.0,
+   "note": "(drum-free) ui_pop/soft; was pro_pop_in/deep",
+   "takes": [
+    "takes/ui_pop__soft_1.wav",
+    "takes/ui_pop__soft_2.wav",
+    "takes/ui_pop__soft_3.wav"
+   ]
+  },
+  "land.light": {
+   "sound": "knock/plastic",
+   "align": "onset",
+   "level_db": -8.0,
+   "note": "(drum-free) knock/plastic; was tap/soft",
+   "takes": [
+    "takes/knock__plastic_1.wav",
+    "takes/knock__plastic_2.wav",
+    "takes/knock__plastic_3.wav"
+   ]
+  },
+  "pop": {
+   "sound": "fit/pop/mouth_plop",
+   "align": "onset",
+   "level_db": -2.5,
+   "note": "a soft mouth plop, a CC0 recording fitted as code (0.28 s), no pitch glide: matches 'a soft natural pop' at z +2.98, p 1.00 over synth-blip descriptions (pro_pop_in/airy: +1.88, 0.98), realness 0.97 (0.65)",
+   "takes": [
+    "takes/fit__pop__mouth_plop_1.wav",
+    "takes/fit__pop__mouth_plop_2.wav",
+    "takes/fit__pop__mouth_plop_3.wav"
+   ]
+  },
+  "whoosh.short": {
+   "sound": "fit/whoosh.short/bamboo_swish",
+   "align": "peak",
+   "level_db": -9.0,
+   "note": "a short whoosh, a CC0 recording fitted as code (0.48 s, one smooth pass): matches 'a short fast whoosh swish through the air' at z +5.32 (swipe/velvet, which reads as 'a heavy thud': +2.01), realness 0.99 (0.97)",
+   "takes": [
+    "takes/fit__whoosh-short__bamboo_swish_1.wav",
+    "takes/fit__whoosh-short__bamboo_swish_2.wav",
+    "takes/fit__whoosh-short__bamboo_swish_3.wav"
+   ]
+  },
+  "whoosh.long": {
+   "sound": "whoosh_big/gust",
+   "align": "peak",
+   "level_db": -7.0,
+   "note": "(drum-free) whoosh_big/gust; was whoosh_big/swell",
+   "takes": [
+    "takes/whoosh_big__gust_1.wav",
+    "takes/whoosh_big__gust_2.wav"
+   ]
+  },
+  "suck": null,
+  "riser": null,
+  "drop": null,
+  "key": {
+   "sound": "typing_key/thock",
+   "align": "onset",
+   "level_db": -10.0,
+   "note": "a thocky mechanical key, a new take per keystroke; the light / laptop members ring (comb ring in the audit)",
+   "takes": [
+    "takes/typing_key__thock_1.wav",
+    "takes/typing_key__thock_2.wav",
+    "takes/typing_key__thock_3.wav",
+    "takes/typing_key__thock_4.wav",
+    "takes/typing_key__thock_5.wav",
+    "takes/typing_key__thock_6.wav"
+   ]
+  },
+  "key.space": {
+   "sound": "typing_key/laptop",
+   "align": "onset",
+   "level_db": -9.5,
+   "note": "(drum-free) typing_key/laptop; was fit/key.space/thock_space",
+   "takes": [
+    "takes/typing_key__laptop_1.wav",
+    "takes/typing_key__laptop_2.wav",
+    "takes/typing_key__laptop_3.wav"
+   ]
+  },
+  "key.return": {
+   "sound": "typing_key/clicky",
+   "align": "onset",
+   "level_db": -7.0,
+   "note": "(drum-free) typing_key/clicky; was typing_key/deep",
+   "takes": [
+    "takes/typing_key__clicky_1.wav",
+    "takes/typing_key__clicky_2.wav"
+   ]
+  },
+  "click": {
+   "sound": "fit/click/floss_lid",
+   "align": "onset",
+   "level_db": -4.5,
+   "note": "a small plastic click, a CC0 recording fitted as code (0.13 s, 4.9 kHz centroid): matches 'a soft UI button click' at z +1.70, p 0.73 over synth-blip descriptions (tap/finger, which reads as 'a punchy impact hit': +1.37, 0.61), realness 0.97 (0.89)",
+   "takes": [
+    "takes/fit__click__floss_lid_1.wav",
+    "takes/fit__click__floss_lid_2.wav"
+   ]
+  },
+  "click.confirm": {
+   "sound": "pluck/kalimba_soft",
+   "align": "onset",
+   "level_db": -10.0,
+   "note": "a soft tuned pluck confirms: the same voice as bell and text, quieter",
+   "takes": [
+    "takes/pluck__kalimba_soft_1.wav"
+   ]
+  },
+  "snap": {
+   "sound": "fit/snap/switch_flip",
+   "align": "onset",
+   "level_db": -3.5,
+   "note": "a switch flip, a CC0 recording fitted as code (0.19 s, one attack): matches 'a toggle switch click' at z +2.24, p 1.00 over synth-blip descriptions (pro_pop_in/knock: +0.61, 0.27), realness 0.97 (0.08)",
+   "takes": [
+    "takes/fit__snap__switch_flip_1.wav",
+    "takes/fit__snap__switch_flip_2.wav"
+   ]
+  },
+  "swell": null,
+  "bell": {
+   "sound": "pluck/kalimba",
+   "align": "onset",
+   "level_db": -5.0,
+   "pitches": [
+    "G4",
+    "A4",
+    "C5",
+    "D5",
+    "E5",
+    "G5",
+    "A5",
+    "C6",
+    "D6",
+    "E6"
+   ],
+   "note": "the launch film's kalimba on two octaves of the key's pentatonic (C: G4-E6, 10 notes, until a retune moves it): one tuned note per progress step or motif note, so a climbing motif has a rung for every step",
+   "takes": [
+    "takes/pluck__kalimba_1.wav"
+   ]
+  },
+  "text": {
+   "sound": "pluck/kalimba_soft",
+   "align": "onset",
+   "level_db": -12.0,
+   "pitches": [
+    "C5",
+    "D5",
+    "E5",
+    "G5",
+    "A5"
+   ],
+   "note": "one soft tuned note when a text fragment resolves (not per word), stepping through the chord's tones among the five pentatonic degrees of one octave, under the picture",
+   "takes": [
+    "takes/pluck__kalimba_soft_2.wav"
+   ]
+  }
+ }
+}

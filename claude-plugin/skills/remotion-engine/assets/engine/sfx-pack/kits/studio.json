@@ -1,0 +1,299 @@
+{
+ "schema": "motion-graphics-kit/1",
+ "name": "studio",
+ "note": "The professional default: clean, drum-free UI sound for kinetic type and product films. Real CC0 recordings fitted as code for keys, clicks, the bamboo touch and the swish; rounded tonal pops; a warm struck tine for hero moments, tuned into the music key; air risers and breath swells. No kicks, sub thumps, sub drops or noise hats: every short sound keeps under 30 % of its energy below 150 Hz.",
+ "source": "earshot kit preset \"studio\" (earshot 0.4.0, bank forge_v2r6+forge04r1+fit1+pluck1)",
+ "mix": {
+  "level": "bed",
+  "stop_down": {
+   "before": [
+    "whoosh.long",
+    "swell"
+   ],
+   "depth_db": [
+    5,
+    7
+   ],
+   "length_s": [
+    0.25,
+    0.35
+   ],
+   "release": "on the hit"
+  }
+ },
+ "roles": {
+  "tick": {
+   "sound": "click/soft",
+   "align": "onset",
+   "level_db": -8.0,
+   "bed_db": 3.0,
+   "offset_ms": 0,
+   "min_gap_ms": 110,
+   "note": "a short modal tick with a small body (2.6 kHz): labels and counters, never hi-hat bright",
+   "takes": [
+    "takes/click__soft_1.wav",
+    "takes/click__soft_2.wav",
+    "takes/click__soft_3.wav"
+   ]
+  },
+  "tick.crisp": {
+   "sound": "fit/tick/domino",
+   "align": "onset",
+   "level_db": -10.0,
+   "bed_db": 3.0,
+   "offset_ms": 0,
+   "min_gap_ms": 66,
+   "note": "domino pieces knocking (a CC0 recording fitted as code): the start of a decode",
+   "takes": [
+    "takes/fit__tick__domino_1.wav",
+    "takes/fit__tick__domino_2.wav",
+    "takes/fit__tick__domino_3.wav"
+   ]
+  },
+  "tock": {
+   "sound": "knock/wood",
+   "align": "onset",
+   "level_db": -6.0,
+   "bed_db": 8.0,
+   "offset_ms": -40,
+   "min_gap_ms": 100,
+   "note": "a mid-band wooden knock (400 Hz block)",
+   "takes": [
+    "takes/knock__wood_1.wav",
+    "takes/knock__wood_2.wav",
+    "takes/knock__wood_3.wav"
+   ]
+  },
+  "hit": {
+   "sound": "notify/mid_tine",
+   "align": "onset",
+   "level_db": -3.0,
+   "bed_db": 8.0,
+   "offset_ms": 0,
+   "pitches": [
+    "C5",
+    "D5",
+    "E5",
+    "G5",
+    "A5"
+   ],
+   "note": "a rounded felt-struck tine over its octave: the hero lands on a warm tuned note instead of a kick",
+   "takes": [
+    "takes/notify__mid_tine_2.wav"
+   ]
+  },
+  "land": {
+   "sound": "ui_pop/soft",
+   "align": "onset",
+   "level_db": -6.0,
+   "bed_db": 8.0,
+   "offset_ms": 30,
+   "min_gap_ms": 159,
+   "note": "a soft rounded mid pop (550 Hz)",
+   "takes": [
+    "takes/ui_pop__soft_1.wav",
+    "takes/ui_pop__soft_2.wav",
+    "takes/ui_pop__soft_3.wav"
+   ]
+  },
+  "land.light": {
+   "sound": "fit/hit/bamboo_tok",
+   "align": "onset",
+   "level_db": -10.0,
+   "bed_db": 3.0,
+   "offset_ms": -60,
+   "min_gap_ms": 115,
+   "note": "a light bamboo touch (a CC0 recording fitted as code)",
+   "takes": [
+    "takes/fit__hit__bamboo_tok_1.wav",
+    "takes/fit__hit__bamboo_tok_2.wav",
+    "takes/fit__hit__bamboo_tok_3.wav"
+   ]
+  },
+  "pop": {
+   "sound": "ui_pop/step",
+   "align": "onset",
+   "level_db": -8.0,
+   "bed_db": 8.5,
+   "offset_ms": 4,
+   "min_gap_ms": 114,
+   "note": "the soft pop a step higher, falling 3 st",
+   "takes": [
+    "takes/ui_pop__step_1.wav",
+    "takes/ui_pop__step_2.wav",
+    "takes/ui_pop__step_3.wav"
+   ]
+  },
+  "whoosh.short": {
+   "sound": "fit/whoosh.short/bamboo_swish",
+   "align": "peak",
+   "level_db": -8.0,
+   "bed_db": 9.0,
+   "offset_ms": 37,
+   "note": "a real short swish (CC0 recording fitted as code); its peak lands just after the cut",
+   "takes": [
+    "takes/fit__whoosh-short__bamboo_swish_1.wav",
+    "takes/fit__whoosh-short__bamboo_swish_2.wav",
+    "takes/fit__whoosh-short__bamboo_swish_3.wav"
+   ]
+  },
+  "whoosh.long": {
+   "sound": "whoosh_big/gust",
+   "align": "peak",
+   "level_db": -7.0,
+   "bed_db": 8.5,
+   "offset_ms": 3,
+   "note": "an airy gust for big transitions, no low thump",
+   "takes": [
+    "takes/whoosh_big__gust_1.wav",
+    "takes/whoosh_big__gust_2.wav"
+   ]
+  },
+  "suck": null,
+  "riser": {
+   "sound": "riser/air",
+   "align": "peak",
+   "level_db": -6.0,
+   "bed_db": 8.0,
+   "offset_ms": -23,
+   "note": "an air build into a reveal, no sub or synth sweep",
+   "takes": [
+    "takes/riser__air_1.wav",
+    "takes/riser__air_2.wav"
+   ]
+  },
+  "swell": {
+   "sound": "reverse_swell/breath",
+   "align": "peak",
+   "level_db": -7.0,
+   "bed_db": 9.5,
+   "offset_ms": 42,
+   "note": "a mid-band reverse breath, half wide",
+   "takes": [
+    "takes/reverse_swell__breath_1.wav",
+    "takes/reverse_swell__breath_2.wav"
+   ]
+  },
+  "drop": null,
+  "key": {
+   "sound": "fit/key/medium",
+   "align": "onset",
+   "level_db": -11.0,
+   "bed_db": 6.5,
+   "offset_ms": 8,
+   "min_gap_ms": 87,
+   "note": "a real mechanical key, press and release (CC0 recording fitted as code)",
+   "takes": [
+    "takes/fit__key__medium_1.wav",
+    "takes/fit__key__medium_2.wav",
+    "takes/fit__key__medium_3.wav",
+    "takes/fit__key__medium_4.wav",
+    "takes/fit__key__medium_5.wav",
+    "takes/fit__key__medium_6.wav"
+   ]
+  },
+  "key.space": {
+   "sound": "typing_key/laptop",
+   "align": "onset",
+   "level_db": -11.0,
+   "bed_db": 6.5,
+   "offset_ms": 8,
+   "note": "a softer laptop key for spaces (no thock)",
+   "takes": [
+    "takes/typing_key__laptop_1.wav",
+    "takes/typing_key__laptop_2.wav",
+    "takes/typing_key__laptop_3.wav"
+   ]
+  },
+  "key.return": {
+   "sound": "typing_key/clicky",
+   "align": "onset",
+   "level_db": -8.0,
+   "bed_db": 7.0,
+   "offset_ms": 8,
+   "takes": [
+    "takes/typing_key__clicky_7.wav",
+    "takes/typing_key__clicky_8.wav"
+   ]
+  },
+  "click": {
+   "sound": "fit/click/floss_lid",
+   "align": "onset",
+   "level_db": -6.0,
+   "bed_db": 6.5,
+   "offset_ms": -11,
+   "min_gap_ms": 85,
+   "note": "a small plastic click (CC0 recording fitted as code)",
+   "takes": [
+    "takes/fit__click__floss_lid_1.wav",
+    "takes/fit__click__floss_lid_2.wav"
+   ]
+  },
+  "click.confirm": {
+   "sound": "notify/mid_wood",
+   "align": "onset",
+   "level_db": -9.0,
+   "bed_db": 8.5,
+   "offset_ms": 0,
+   "note": "a soft wooden bar with its octave body",
+   "takes": [
+    "takes/notify__mid_wood_1.wav"
+   ]
+  },
+  "snap": {
+   "sound": "fit/snap/switch_flip",
+   "align": "onset",
+   "level_db": -6.0,
+   "bed_db": 4.0,
+   "offset_ms": 9,
+   "min_gap_ms": 66,
+   "takes": [
+    "takes/fit__snap__switch_flip_1.wav",
+    "takes/fit__snap__switch_flip_2.wav"
+   ]
+  },
+  "bell": {
+   "sound": "mallet/celesta",
+   "align": "onset",
+   "level_db": -8.0,
+   "bed_db": 7.5,
+   "offset_ms": -20,
+   "min_gap_ms": 110,
+   "pitches": [
+    "G4",
+    "A4",
+    "C5",
+    "D5",
+    "E5",
+    "G5",
+    "A5",
+    "C6",
+    "D6",
+    "E6"
+   ],
+   "note": "a wide celesta note",
+   "takes": [
+    "takes/mallet__celesta_3.wav"
+   ]
+  },
+  "text": {
+   "sound": "pluck/kalimba_soft",
+   "align": "onset",
+   "level_db": -12.0,
+   "bed_db": 4.0,
+   "offset_ms": 0,
+   "min_gap_ms": 110,
+   "pitches": [
+    "C5",
+    "D5",
+    "E5",
+    "G5",
+    "A5"
+   ],
+   "note": "one soft tuned kalimba note when a line resolves",
+   "takes": [
+    "takes/pluck__kalimba_soft_3.wav"
+   ]
+  }
+ }
+}

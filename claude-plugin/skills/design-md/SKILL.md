@@ -3,7 +3,7 @@ name: design-md
 description: Create, extract, validate or edit DESIGN.md, the static motion-design system (brand, colours, typography roles, textures, motion timing, audio palette, formats, export) that every motion-graphics video obeys. Use when setting up the motion-graphics pipeline for a brand, when the user uploads or asks for a design.md, or wants to derive a motion style from a website, brand guide or reference video.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
   schema: motion-design/1.0
 ---
 
@@ -38,7 +38,7 @@ multiple-choice UI if the platform has it.
 | 1 | Brand name · website/CTA URL · main platform · logo file | `brand.*`, `canvas.default_format`, `.motion-graphics/assets/logo.svg` |
 | 2 | Colours (hex or "pull from site") · light or dark · text alignment | `colors.*`, `layout.anchor` |
 | 3 | Fonts (and licence) · motion personality · surface feel | `typography.families`, `motion.easing/timing`, `texture.*` |
-| 4 | Sound mode · music mood + tempo · anything the brand must never do | `audio.*`, `motion.forbidden` |
+| 4 | Sound style (kit: studio · launch · calm · crisp · minimal · none) · music mood + tempo (drums in the bed? default no) · anything the brand must never do | `audio.sfx.kit`, `audio.music.*`, `motion.forbidden` |
 
 Then DERIVE everything else (see the presets below), write the prose body, and show a summary card:
 palette swatches as hex, the three fonts, the personality in one sentence, scene length, music preset/BPM.
@@ -89,7 +89,7 @@ logo or a client's mark into the design.
 - [ ] every `color:` in roles names a key in `colors`
 - [ ] the label, setup, headline, tail, line and cta roles exist (stat and item if those templates are used)
 - [ ] `canvas.default_format` exists in `canvas.formats` and `canvas.safe_area`
-- [ ] every `audio.sfx.map` value is an id from the sound-design library (or null)
+- [ ] `audio.sfx.kit` is set (studio / launch / calm / crisp / minimal / none); role / event overrides use known roles and sounds (`mg validate` checks). Classic designs: every `audio.sfx.map` value is a synth id (or null)
 - [ ] `mg design validate` passes and a preview session's contact sheet has been looked at (workspace mode)
 
 ## Editing later

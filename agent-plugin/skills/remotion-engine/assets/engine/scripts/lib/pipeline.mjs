@@ -219,6 +219,15 @@ export async function qaSession(p, sp, { format, file, serveUrl } = {}) {
       check('audio.true_peak', Number(L.input_tp) <= tp + 0.5, `${L.input_tp} dBTP (ceiling ${tp})`, 'warn');
     } else check('audio.loudness', false, 'could not parse loudnorm output', 'warn');
   }
+  // sound-kit mixes: rules measured on professional launch films (earshot's launch-film playbook)
+  const ar = spec.audio?.report;
+  if (ar?.kit) {
+    if (ar.first_sound_s !== null && ar.first_sound_s !== undefined) check('audio.first_sound', ar.first_sound_s <= 0.5, `first sound at ${ar.first_sound_s.toFixed(2)} s (pros: 0.04-0.48 s; no silent cold open)`, 'warn');
+    const musicLed = ar.level_mode === 'bed';
+    if (musicLed) check('audio.accents', ar.accents_per_10s <= 13, `${ar.accents_per_10s} designed accents per 10 s (music-led films: 3-13; accent the reveal, the logo and key actions, let the music carry the rest)`, 'warn');
+    check('audio.stack', !(ar.stacked || []).length, (ar.stacked || []).length ? `stacked designed sounds removed: ${ar.stacked.map((s) => `${s.dropped} at ${s.at_s}s under ${s.kept}`).join('; ')}` : 'one designed gesture at a time', 'warn');
+    check('audio.sync', !ar.late_sync, ar.late_sync ? `${ar.late_sync} sound(s) cue before 0 s and cannot land on their frame` : `every sound placed on its measured sync point, to the sample (kit ${ar.kit})`, 'warn');
+  }
   const mb = statSync(file).size / 1e6;
   check('file.size', mb < 200, `${mb.toFixed(1)} MB`, 'warn');
   let sheet = null;

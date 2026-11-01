@@ -14,6 +14,7 @@ function loadMetrics(baseDir) {
   return f && existsSync(f) ? { ...BUILTIN_METRICS, ...JSON.parse(readFileSync(f, 'utf8')) } : BUILTIN_METRICS;
 }
 import { allSfxIds } from './sfx.mjs';
+import { KIT_NAMES, ROLES, EVENT_ROLES, knownSoundIds } from './kits.mjs';
 
 const BEAT_SLOTS = ['label', 'setup', 'headline', 'tail', 'lines', 'items', 'value', 'before', 'after', 'cta', 'logo', 'parts', 'prefix', 'suffix'];
 const SLOT_ROLE = { label: 'label', setup: 'setup', headline: 'headline', tail: 'tail', lines: 'line', items: 'item', value: 'stat', before: 'setup', after: 'headline', cta: 'cta' };
@@ -244,10 +245,24 @@ export function compile({ design, choreo, content, baseDir, formatOverride, jobI
   const flashes = scenes.filter((s) => s.transitionOut === 'flash_cut').length;
   if (flashes / Math.max(1, total) > (D.accessibility?.max_flashes_per_second ?? 3)) issue(issues, 'error', 'a11y.flash', 'Too many flash transitions per second');
 
-  // ---- sfx map sanity
-  const map = D.audio?.sfx?.map || {};
-  const SFX_IDS = allSfxIds();
-  for (const [ev, id] of Object.entries(map)) if (id && !SFX_IDS.includes(id)) issue(issues, 'error', 'sfx.unknown', `audio.sfx.map.${ev} = "${id}" is not in the SFX library`);
+  // ---- sfx sanity: kit mode (audio.sfx.kit) or the classic event → sound map
+  const sfxD = D.audio?.sfx || {};
+  const kitMode = sfxD.kit && sfxD.kit !== 'classic';
+  const SFX_IDS = kitMode ? knownSoundIds() : allSfxIds();
+  if (sfxD.kit && !['classic', 'none'].includes(sfxD.kit) && !KIT_NAMES.includes(sfxD.kit)) issue(issues, 'error', 'sfx.kit', `audio.sfx.kit "${sfxD.kit}" is not a kit`, {}, `use one of: ${[...KIT_NAMES, 'none', 'classic'].join(' | ')}`);
+  if (kitMode) {
+    for (const [r, o] of Object.entries(sfxD.roles || {})) {
+      if (!ROLES.includes(r)) issue(issues, 'error', 'sfx.role', `audio.sfx.roles.${r} is not a role`, {}, `roles: ${ROLES.join(', ')}`);
+      else if (o && o.sound && !SFX_IDS.includes(o.sound)) issue(issues, 'error', 'sfx.unknown', `audio.sfx.roles.${r}.sound "${o.sound}" is not a known sound`, {}, 'pack ids (sound-design skill → kits), built-in synth ids, or a .wav in .motion-graphics/assets/sfx/');
+    }
+    for (const [ev, r] of Object.entries(sfxD.events || {})) {
+      if (!(ev in EVENT_ROLES)) issue(issues, 'error', 'sfx.event', `audio.sfx.events.${ev} is not a timeline event`, {}, `events: ${Object.keys(EVENT_ROLES).join(', ')}`);
+      else if (r !== null && !ROLES.includes(r)) issue(issues, 'error', 'sfx.role', `audio.sfx.events.${ev} = "${r}" is not a role`, {}, `roles: ${ROLES.join(', ')} (or null for silence)`);
+    }
+  } else {
+    const map = sfxD.map || {};
+    for (const [ev, id] of Object.entries(map)) if (id && !SFX_IDS.includes(id)) issue(issues, 'error', 'sfx.unknown', `audio.sfx.map.${ev} = "${id}" is not in the SFX library`);
+  }
 
   // ---- global audio cues (scene-relative events -> absolute frames)
   const cues = [];
@@ -256,12 +271,15 @@ export function compile({ design, choreo, content, baseDir, formatOverride, jobI
     for (const e of tl.events) cues.push({ ...e, frame: sc.from + e.frame, scene: sc.id });
     if (i > 0 && ['glitch_cut', 'flash_cut'].includes(sc.transitionIn)) cues.push({ type: 'transition', frame: sc.from, scene: sc.id });
   });
-  // extra sounds requested by choreography scene blocks (`sfx: [{id, at_s, gain_db}]`)
+  // extra sounds requested by choreography scene blocks: `sfx: [{id | role, at_s, gain_db, note}]`
   scenesIn.forEach((s) => {
     const sc = scenes.find((x) => x.id === s.id);
     if (sc && Array.isArray(s.sfx)) for (const x of s.sfx) {
-      if (!SFX_IDS.includes(x.id)) issue(issues, 'error', 'sfx.unknown', `Scene sfx "${x.id}" not in library`, { scene: s.id });
-      cues.push({ type: 'manual', id: x.id, frame: sc.from + Math.round((x.at_s || 0) * fps), gain_db: x.gain_db || 0, scene: s.id });
+      if (x.role) {
+        if (!kitMode) { issue(issues, 'error', 'sfx.role', `Scene sfx role "${x.role}" needs a sound kit (audio.sfx.kit in DESIGN.md)`, { scene: s.id }, 'use `id:` with the classic map, or set audio.sfx.kit'); continue; }
+        if (!ROLES.includes(x.role)) { issue(issues, 'error', 'sfx.role', `Scene sfx role "${x.role}" is not a role`, { scene: s.id }, `roles: ${ROLES.join(', ')}`); continue; }
+      } else if (!SFX_IDS.includes(x.id)) { issue(issues, 'error', 'sfx.unknown', `Scene sfx "${x.id}" not in library`, { scene: s.id }); continue; }
+      cues.push({ type: 'manual', id: x.id, role: x.role, note: x.note, frame: sc.from + Math.round((x.at_s || 0) * fps), gain_db: x.gain_db || 0, scene: s.id });
     }
   });
   cues.sort((a, b) => a.frame - b.frame);

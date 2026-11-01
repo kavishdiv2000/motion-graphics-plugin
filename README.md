@@ -50,6 +50,7 @@ workspace:
      CHOREOGRAPHY.md        this video's scene plan
      build/                 spec, validation report, audio mix, contact sheets, QA (regenerable)
      output/                <id>-<format>.mp4 · thumb-<format>.png · POST.md   ← the deliverables
+     usage.json             tokens this video consumed (see Token usage below) + usage.log.jsonl
   inbox/                    drop CONTENT.md files here for unattended batch runs
   mg.mjs                    the CLI agents call:  node .motion-graphics/mg.mjs <command>
   .engine/                  render engine + node_modules (managed, git-ignored)
@@ -108,10 +109,10 @@ The folders are named after the plugin (`motion-graphics`) because some clients 
 | Client | Install from the build | Check it |
 |---|---|---|
 | **Claude Code**: one session | `claude --plugin-dir build/claude-plugin/motion-graphics` (or the claude zip) | `/plugin` → Installed shows **motion-graphics** |
-| **Claude Code**: every session, no marketplace | `./scripts/install-local.sh claude` → copies to `~/.claude/skills/motion-graphics`, then `/reload-plugins` | `claude plugin list` shows `motion-graphics@skills-dir` 1.1.0 |
+| **Claude Code**: every session, no marketplace | `./scripts/install-local.sh claude` → copies to `~/.claude/skills/motion-graphics`, then `/reload-plugins` | `claude plugin list` shows `motion-graphics@skills-dir` 1.2.0 |
 | **Claude Code**: via the local marketplace | `/plugin marketplace add ./build` → `/plugin install motion-graphics@motion-graphics-local` | `/plugin` |
 | **Claude Code**: portable variant | `claude --plugin-dir build/agent-plugin/motion-graphics` (skills only, no agents/commands) | |
-| **Claude app** (claude.ai / desktop) | Settings → Plugins → *Upload a plugin* → `build/dist/motion-graphics-claude-plugin-<v>.zip` | the plugin list shows v1.1.0 (remove an older upload first) |
+| **Claude app** (claude.ai / desktop) | Settings → Plugins → *Upload a plugin* → `build/dist/motion-graphics-claude-plugin-<v>.zip` | the plugin list shows v1.2.0 (remove an older upload first) |
 | **Cursor** | `./scripts/install-local.sh cursor` → copies to `~/.cursor/plugins/local/motion-graphics`, then **Developer: Reload Window** | Settings → Plugins / skills list shows motion-graphics |
 | **Codex / ChatGPT desktop** | `codex plugin marketplace add ./build` → install "motion-graphics" from the plugin list → restart | the plugin list |
 | **Copilot · VS Code · Kiro** | the client's "install plugin from folder" → `build/agent-plugin/motion-graphics` | the client's plugin/skills list |
@@ -193,6 +194,32 @@ and only the hook or the structure changes.
 
 ---
 
+## Token usage per video
+Every session folder gets a token ledger, so you know what each video cost in model usage:
+```
+.motion-graphics/sessions/<id>/usage.json        totals: input · cache write · cache read · output (+ reasoning) · total,
+                                                 split by model, by client and by chat
+.motion-graphics/sessions/<id>/usage.log.jsonl   one line per recorded agent turn
+.motion-graphics/usage/workspace.json            motion-graphics work not tied to one video (e.g. DESIGN.md setup)
+```
+`node .motion-graphics/mg.mjs usage` prints a table of all sessions; `usage <session>` one session; `--json` for scripts.
+`session show <id>` includes the total.
+
+| Client | How it is recorded | Accuracy |
+|---|---|---|
+| **Claude Code** (Claude plugin) | automatic: the plugin's `Stop`/`SessionEnd` hook reads the chat transcript after every turn (subagents included) | exact |
+| **Claude Code** (portable agent plugin) | `node .motion-graphics/mg.mjs usage hooks install claude` once → adds the hook to `.claude/settings.json` | exact |
+| **Codex** | `node .motion-graphics/mg.mjs usage hooks install codex` once → `.codex/hooks.json` (Stop hook reads the rollout file) | exact |
+| **Cursor** | `node .motion-graphics/mg.mjs usage hooks install cursor` once → `.cursor/hooks.json` (`afterAgentResponse`) | best effort: Cursor doesn't document its token fields |
+| **Copilot, chat UIs, anything else** | the host exposes no token counts to plugins: `mg usage add <session> --input N --output N [--model m] [--client copilot]` | what you enter |
+
+How tokens are assigned to a video: the turn is replayed in order. Each model call counts toward the session it was working
+on (the one whose id appears in its commands, files or output); calls before the first mention go to the session that chat
+worked on last. A chat that switches between videos is split correctly. The ledger counts **everything the agent spent
+while working on the video** (reading, thinking, tool calls, subagents), not just the plugin's text. Hooks are no-ops in
+projects without `.motion-graphics/`, never print, and never fail the turn (errors go to `.motion-graphics/.state/usage-errors.log`).
+The models' prices change, so the ledger stores tokens, not money.
+
 ## The three inputs: full reference
 > This section is self-contained. Paste it into any model as the contract for the files it must write.
 > Copy-ready templates: `agent-plugin/skills/{design-md,choreography-md,content-md}/references/*.template.md`.
@@ -217,13 +244,14 @@ timings in frames at `canvas.fps`, colours as `#RRGGBB`.
 | `typography.roles` | `label, setup, headline, tail, line, item, stat, cta`: `{family, size_px, weight, tracking_em, case, color, fit (fill / shrink / wrap), min_px / min_scale / max_lines, line_height, max_chars, glow, format, marker}` | every text role's size, fitting and limits; `fill` = the line spans the column exactly |
 | `texture` | `grid{cell_px,line_px,color,opacity}`, `scanlines{spacing_px,thickness_px,opacity}`, `vignette{strength,roundness}`, `grain{amount,fps}`, `flicker{amplitude}`, `glow{headline_blur_px,…}`, `chromatic_aberration{label_px,glitch_px}`, `noise_seed` | surface feel (each layer can be switched on or off) |
 | `motion` | `personality`, `easing{enter,exit,standard}` (cubic-bezier), `timing{scene_lead_in, label_in, label_overlap, gap, headline_gap, word_stagger, word_in, decode_char_stagger, decode_scramble, decode_jitter, decode_glyph_hold, type_char, count, fade, strike, exit, min_hold _frames; reading_wpm}`, `reveal_defaults{slot: reveal}`, `scramble_charset`, `word_in{blur_px,rise_px,pending_color}`, `scene{default/min/max_duration_s, transition, transition_frames}`, `camera{drift_scale, shake_on_land_px}`, `rhythm{snap_scene_to_beat, land_on_beat}`, `forbidden[]` | how everything moves, and what is never allowed |
-| `audio` | `sample_rate`; `music{source (synth/file/none), file, preset (signal_drone/pulse_minimal/warm_keys/dark_tension), bpm, key, scale, gain_db, fade_in_s, fade_out_s, duck_db}`; `sfx{gain_db, min_spacing_frames{}, map{event: sfx_id}, gains{event: dB}}`; `master{lufs_target, true_peak_db}`; `voiceover{enabled, provider}` | music bed, event→sound map, loudness |
+| `audio` | `sample_rate`; `music{source (synth/file/none), file, preset (signal_drone/pulse_minimal/warm_keys/dark_tension), bpm, key, scale, gain_db, fade_in_s, fade_out_s, stop_down}`; `sfx{kit (launch/calm/crisp/minimal/none/classic), trim_db, roles{role: {sound, offset_ms, bed_db, level_db, min_gap_ms} \| null}, events{event: role \| null}}` (classic: `gain_db, min_spacing_frames, map, gains`); `master{lufs_target, true_peak_db, codec_headroom_db}`; `voiceover{enabled, provider}` | music bed, sound kit, loudness |
 | `endcard` | `show_logo`, `cta_default`, `hold_s` | the close |
 | `export` | `container, video_codec, crf, pixel_format, audio_codec, audio_bitrate, thumbnail_frame, max_duration_s{platform: s}` | encoding, platform length limits |
 | `accessibility` | `min_text_px`, `max_flashes_per_second`, `captions` | legibility and photosensitivity |
 
-SFX events for `audio.sfx.map`: `scene_in, label_in, word_in, decode_start, decode_land, decode_land_minor, type_char,
-type_done, count_tick, count_land, strike, logo_in, exit, transition`. Field-by-field ranges and guidance:
+Timeline events (`audio.sfx.events`): `scene_in, label_in, word_in, words_done, decode_start, decode_land, decode_land_minor,
+type_char, type_space, type_done, count_tick, count_land, strike, fade_in, logo_in, exit, transition`. Roles and every kit's
+sounds: [`sound-design/references/kits.md`](agent-plugin/skills/sound-design/references/kits.md). Field-by-field ranges and guidance:
 [`design-md/references/parameters.md`](agent-plugin/skills/design-md/references/parameters.md).
 
 <details><summary>Minimal DESIGN.md front matter (abridged example)</summary>
@@ -298,14 +326,22 @@ the build warns on others (→ “ ” emoji).
   The compiler, timeline, audio and validator are renderer-agnostic, and an MIT-only fallback (HTML + Playwright + FFmpeg)
   is documented. Alternatives compared (Motion Canvas, Revideo, Manim, After Effects/nexrender, Lottie, FFmpeg drawtext, AI video):
   [docs/decisions/renderer.md](docs/decisions/renderer.md).
-- **Audio: procedural synthesis in Node.** 50 SFX + 4 music-bed presets generated from code: deterministic, royalty-free,
-  beat-locked to the same timeline as the picture, and mastered to −14 LUFS / −1 dBTP. Licensed or AI-made sounds plug in as WAVs
-  (generated once, never at render time). [docs/decisions/audio.md](docs/decisions/audio.md).
+- **Audio: drum-free sound kits from [earshot](https://github.com/Leonxlnx/earshot), placed by measured sync points.** Five kits
+  (`studio` (default) · `launch` · `calm` · `crisp` · `minimal`): 43 sounds / 127 takes, designed in code or fitted from CC0 recordings (MIT),
+  pre-rendered so the engine stays pure Node. Every sound lands by its measured attack or peak with the offsets pros use,
+  sits a measured 3–10 dB over the music, keeps run spacing, rotates takes, tunes to the key; the music steps down before
+  hits. Music beds are synthesised (4 presets) or your licensed WAV. The 50-sound synth library stays as `kit: classic`.
+  Mastered to −14 LUFS / −1 dBTP after AAC. [docs/decisions/audio.md](docs/decisions/audio.md).
 - **Text fitting: exact glyph metrics** extracted from the bundled fonts, so validation and rendering agree to the pixel.
 - **QA: a contact sheet rendered from the composition** (all scenes, mid and landed) that the agent must look at, plus probe and
   loudness checks after the render, plus an independent critic agent.
 
-### SFX library (50, all synthesised; audition: `node .motion-graphics/mg.mjs sfx` → `.motion-graphics/assets/sfx-library/_reel.wav`)
+### Sound kits (default; audition: `node .motion-graphics/mg.mjs sfx --kit launch` → `.motion-graphics/assets/sfx-library/kit-launch.wav`)
+Set one line in DESIGN.md: `audio.sfx.kit: studio | launch | calm | crisp | minimal | none` (`studio` = the clean professional default). All kits are drum-free, and the synth music beds play without drums unless `audio.music.percussion: true`. Every role, sound and number:
+[`kits.md`](agent-plugin/skills/sound-design/references/kits.md). Credits: `remotion-engine/assets/engine/sfx-pack/CREDITS.md`
+(earshot, MIT, © 2026 Leon Lin; fitted sounds from CC0 Freesound recordings).
+
+### Classic SFX library (`kit: classic`; 50, all synthesised; audition: `node .motion-graphics/mg.mjs sfx` → `.motion-graphics/assets/sfx-library/_reel.wav`)
 | Family | Sounds |
 |---|---|
 | UI / clicks (12) | click_soft · click_hard · key_soft · key_click · tick_hi · tick_lo · double_tick · toggle_on · toggle_off · relay_click · mouse_click · tap_wood |

@@ -29,7 +29,8 @@ Work from evidence, not vibes. Each extracted value gets a comment saying where 
    - Tempo: an autocorrelation of the onset envelope (`python3`) or count the hits over 10 s.
    - Spectrum: `ffmpeg -i ref.mp4 -lavfi showspectrumpic=s=1600x500:scale=log:fscale=log spec.png` → drone or sub,
      mid sequence (pluck/arp), high transients (ticks/glitches).
-   - Map every audible hit to a picture event (tag in, word, decode, land, cut) → `audio.sfx.map`.
+   - Pick the kit whose character matches (soft touches → calm, tight clicks → crisp, music-led → launch, effects-only → minimal);
+     note which picture events carry audible hits → `audio.sfx.events` overrides (e.g. no sound on words → `word_in: null`).
 9. **Fonts**: classify (wide/extended geometric, condensed, grotesk, mono, serif). Name the likely face if it's known,
    then pick the closest OFL face on Fontsource and add `substitute_for:`.
 
@@ -43,7 +44,7 @@ Work from evidence, not vibes. Each extracted value gets a comment saying where 
 | Wide extended hero decoded from random glyphs (`LE\O[`, `JUDGMEN-#`) | `roles.headline` fit fill, reveal decode |
 | All display lines the same width (~920 px) | `fit: fill`, `text_max_width: 0.86` |
 | Red = the turn (LEVERAGE., JUDGMENT.), orange = the payoff (MINUTES., OWN THE VISION.) | `accent_red`, `accent_orange`, rotation |
-| Onsets every 0.6 s → 100 BPM; sub drone, plucked mid arp, high glitch ticks | `audio.music` signal_drone 100 BPM; sfx map |
+| Onsets every 0.6 s → 100 BPM; sub drone, plucked mid arp, high glitch ticks | `audio.music` signal_drone 100 BPM; sfx kit (or classic map for an exact recreation) |
 | End card logo (a third party's mark) | **not copied** — logo slot + wordmark fallback |
 
 ## From a website

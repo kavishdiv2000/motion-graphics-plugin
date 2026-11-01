@@ -16,7 +16,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if command -v cygpath >/dev/null 2>&1; then ROOT="$(cygpath -m "$ROOT")"; fi   # Git Bash: C:/... so node.exe understands it
 BUILD="$ROOT/build"
 [ -d "$BUILD" ] || { echo "✖ no build/ — run ./scripts/build.sh first" >&2; exit 1; }
-NAME="$(ls "$BUILD/agent-plugin" | head -1)"
+NAME="$(cd "$BUILD/agent-plugin" && for d in */; do [ -f "$d/plugin.json" ] && { echo "${d%/}"; break; }; done)"
 [ -f "$BUILD/agent-plugin/$NAME/plugin.json" ] || { echo "✖ build/agent-plugin/$NAME/plugin.json missing — re-run ./scripts/build.sh" >&2; exit 1; }
 HOME_DIR="${USERPROFILE:-$HOME}"; HOME_DIR="$(command -v cygpath >/dev/null 2>&1 && cygpath -u "$HOME_DIR" || echo "$HOME_DIR")"
 

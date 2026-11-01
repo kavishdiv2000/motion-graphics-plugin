@@ -51,6 +51,7 @@ for (const [sk, f] of [['design-md', 'DESIGN'], ['choreography-md', 'CHOREOGRAPH
 
 // 2. regenerate the SFX catalogue from code (needs no npm install: sfx code is dependency-free)
 spawnSync(process.execPath, [join(ENGINE, 'scripts/sfx-docs.mjs'), join(SRC, 'sound-design/references/sfx-catalogue.md')], { stdio: 'inherit' });
+spawnSync(process.execPath, [join(ENGINE, 'scripts/kit-docs.mjs'), join(SRC, 'sound-design/references/kits.md')], { stdio: 'inherit' });
 
 // 3. mirror shared skills into the Claude plugin
 for (const skill of readdirSync(SRC)) {

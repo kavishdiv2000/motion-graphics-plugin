@@ -4,7 +4,7 @@
 //   pulse_minimal — tight 16th square-bass pulse + ticks + kick on energy peaks. Tech/product launches.
 //   warm_keys     — soft triangle pad chords + sparse plucks. Human, calm, B2B services.
 //   dark_tension  — low drone + heartbeat pulse + per-scene noise swells. Problem/agitate hooks.
-import { osc, noise, envExp, lp, hp, bp, pluck, echo, mixInto, buf, mtof, drive, dbToGain } from './dsp.mjs';
+import { fade, osc, noise, envExp, lp, hp, bp, pluck, echo, mixInto, buf, mtof, drive, dbToGain } from './dsp.mjs';
 import { hash, mulberry32 } from '../../src/lib/prng.js';
 
 const NOTE = { C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5, 'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11 };
@@ -31,8 +31,9 @@ export const MUSIC_PRESETS = Object.keys(PRESETS);
  * @param {{startS:number,endS:number,energy:number}[]} o.sections energy 0..1 per scene
  * @returns {[Float32Array, Float32Array]}
  */
-export function makeBed({ sr, durationS, bpm = 100, key = 'A', scale = 'minor', preset = 'signal_drone', sections = [], seed = 1 }) {
-  const P = PRESETS[preset] || PRESETS.signal_drone;
+export function makeBed({ sr, durationS, bpm = 100, key = 'A', scale = 'minor', preset = 'signal_drone', sections = [], seed = 1, percussion = true }) {
+  // percussion: false drops the drum layers (hat-like ticks, kick, heartbeat thump): the bed becomes pad + arp + drone
+  const P = percussion ? (PRESETS[preset] || PRESETS.signal_drone) : { ...(PRESETS[preset] || PRESETS.signal_drone), tick: 0, kick: 0, heart: 0 };
   const sc = SCALES[scale] || SCALES.minor;
   const prog = PROG[scale] || PROG.minor;
   const root = 33 + (NOTE[key] ?? 9) - 9; // A1 = 33 when key = A
@@ -98,7 +99,8 @@ export function makeBed({ sr, durationS, bpm = 100, key = 'A', scale = 'minor', 
       if (e < 0.55 && n % 2) continue; // thinner at low energy
       const d = chordAt(t) + pattern[n % pattern.length];
       const m = degree(d, 2) + (r < 0.12 ? 12 : 0);
-      const p = lp(pluck(sr, 0.7, mtof(m), { damping: 0.994, brightness: 0.55, seed: hash('pk', n) }), sr, 1400 + 2200 * e);
+      let p = lp(pluck(sr, 0.7, mtof(m), { damping: 0.994, brightness: 0.55, seed: hash('pk', n) }), sr, percussion ? 1400 + 2200 * e : 1100 + 900 * e);
+      if (!percussion) p = fade(lp(p, sr, 2400), sr, 0.006, 0.02); // drum-free: no noise click at the pluck's attack
       add(p, t, 0.15 * P.arp * (0.6 + 0.5 * e) * (n % 4 === 0 ? 1.2 : 0.85), n % 2 ? 0.35 : -0.35);
     }
   }

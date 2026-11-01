@@ -3,7 +3,7 @@ name: remotion-engine
 description: Set up, run, debug and extend the bundled Remotion render engine that the motion-graphics plugin installs into a workspace (.motion-graphics/.engine) to turn DESIGN.md + a session's CHOREOGRAPHY.md + CONTENT.md into a validated spec, synthesised audio and an MP4. Use for installing/repairing the engine, the mg CLI (build/stills/render/qa/make), render errors, custom fonts and assets, adding new scene templates or reveals, and performance tuning.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
   remotion: "4.0.531"
 ---
 
@@ -33,7 +33,7 @@ Why Remotion, and what the alternatives are: `references/renderer-decision.md`.
 | `make <id> [--formats a,b] [--preview] [--skip-qa]` | everything above + `output/thumb-<f>.png` + `output/POST.md` |
 | `studio <id>` | Remotion Studio on the session |
 | `inbox` | queued sessions from `inbox/` |
-| `sfx` · `font add <file> "<Family>" <w>` | `assets/sfx-library/` · `assets/fonts/` + `metrics.json` |
+| `sfx` · `sfx kits` · `sfx --kit <name>` · `font add <file> "<Family>" <w>` | classic synth library · kit list · kit audition → `assets/sfx-library/` · `assets/fonts/` + `metrics.json` |
 Exit codes: 0 ok · 1 validation/QA failure (read the message) · 2 usage/IO · 3 not initialised / engine not installed.
 
 ## Architecture
@@ -43,7 +43,7 @@ sessions/<id>/CHOREOGRAPHY.md ────────┼─ scripts/lib/md.mjs 
 sessions/<id>/CONTENT.md ─────────────┘            │
                          scripts/lib/compile.mjs ── validate (copy length, glyph fit, timing, contrast, claims, platform limits)
                                    │  uses src/lib/{templates,timeline,layout}.js  ← shared with the renderer
-              build/spec.<fmt>.json + cues ── scripts/lib/mix.mjs (music.mjs bed + sfx.mjs hits → LUFS master) → build/mix.<fmt>.wav
+              build/spec.<fmt>.json + cues ── scripts/lib/mix.mjs (music.mjs bed + kits.mjs roles from sfx-pack/ [or classic sfx.mjs] → LUFS master) → build/mix.<fmt>.wav
                                    │
          .engine/.stage/<id>/ (assets + mixes) ── publicDir ─ src/Root.tsx → Video → Scene (+ Reveals, Texture) → output/*.mp4
 ```
@@ -66,6 +66,7 @@ sessions/<id>/CONTENT.md ─────────────┘            �
 |---|---|
 | a brand's look, sound, formats | `.motion-graphics/DESIGN.md` (no code) |
 | a brand font / logo / music bed / custom SFX | `.motion-graphics/assets/…` (no code) |
+| the sound kits / pack (`sfx-pack/`: WAV takes + `pack.json` sync points + `kits/*.json`) | regenerate from earshot with the repo's `scripts/build-sfx-pack.py` (development only; see docs/development.md) |
 | a new template, reveal, texture, validation rule, SFX recipe or music preset | the **plugin source** `remotion-engine/assets/engine/`, then re-run `init-workspace.mjs` in each workspace (it upgrades `.engine` when the version changes). Never patch `.engine/` directly: it gets replaced on upgrade. |
 
 ## Adding a template (when the 8 built-ins can't express an idea)

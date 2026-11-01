@@ -152,6 +152,18 @@ cat > "$BUILD/.agents/plugins/marketplace.json" <<JSON
 }
 JSON
 
+# Plain marketplace index inside build/agent-plugin and build/claude-plugin, so pointing VS Code / Copilot
+# ("Chat: Install Plugin From Source") at the parent folder works as well as at the plugin folder itself.
+for KIND in agent-plugin claude-plugin; do
+  cat > "$BUILD/$KIND/marketplace.json" <<JSON
+{
+  "name": "$NAME-$KIND-local",
+  "owner": { "name": "$AUTHOR" },
+  "plugins": [ { "name": "$NAME", "source": "./$NAME", "version": "$VERSION", "description": "$DESC" } ]
+}
+JSON
+done
+
 # ── 4. zip archives ─────────────────────────────────────────────────────────
 say "zip archives"
 mkdir -p "$BUILD/dist"

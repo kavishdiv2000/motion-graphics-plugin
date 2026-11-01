@@ -8,11 +8,13 @@ import { join, basename, resolve, extname, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
   MG_DIRNAME, ENGINE_ROOT, SESSION_STATUSES, findWorkspace, wsPaths, isInitialised, newSessionId, sessionPaths,
-  listSessions, resolveSession, readSession, writeSession, readConfig, slugify, rel,
+  listSessions, resolveSession as resolveSessionRaw, readSession, writeSession, readConfig, slugify, rel,
 } from './lib/workspace.mjs';
+import { touchSession } from './lib/usage.mjs';
 
 const argv = process.argv.slice(2);
-const VALUE_OPTS = new Set(['--workspace', '--format', '--formats', '--frames', '--cols', '--scale', '--id', '--status', '--chat-ref', '--client', '--from', '--title', '--limit', '--design']);
+const VALUE_OPTS = new Set(['--workspace', '--format', '--formats', '--frames', '--cols', '--scale', '--id', '--status', '--chat-ref', '--client', '--from', '--title', '--limit', '--design',
+  '--kit', '--input', '--output', '--cache-read', '--cache-write', '--reasoning', '--model', '--note']);
 const opts = {};
 const pos = [];
 for (let i = 0; i < argv.length; i++) {
@@ -25,6 +27,8 @@ const p = wsPaths(findWorkspace(opts.workspace));
 const ENGINE_VERSION = JSON.parse(readFileSync(join(ENGINE_ROOT, 'package.json'), 'utf8')).version;
 const T = (f) => join(ENGINE_ROOT, 'templates', f);
 const die = (msg, code = 2) => { console.error(`✖ ${msg}`); process.exit(code); };
+// every command that works on a session marks it as "last touched" (token-usage fallback attribution)
+const resolveSession = (ws, ref) => { const s = resolveSessionRaw(ws, ref); if (cmd !== 'usage') touchSession(ws.mg, s.id); return s; };
 
 const HELP = `mg — motion-graphics workspace CLI (engine ${ENGINE_VERSION})
 usage: node ${MG_DIRNAME}/mg.mjs <command>
@@ -51,9 +55,15 @@ pipeline  (all take <ref>; default format = the choreography's)
   qa <ref> [--format f]
   make <ref> [--formats vertical,square] [--preview] [--skip-qa]     build → render → qa → thumbnail → POST.md
   studio <ref> [--format f]         open Remotion Studio on the session
+token usage  (sessions/<id>/usage.json — recorded automatically by the Claude Code plugin hook)
+  usage [<ref>|--all] [--json]      tokens consumed per video session (+ workspace-level work)
+  usage add <ref> --input N --output N [--cache-read N] [--cache-write N] [--model m] [--client c] [--note "…"]
+  usage hooks install codex|cursor|claude   add the recording hook to this project's .codex/ · .cursor/ · .claude/ config
+  usage hook <claude-code|codex|cursor>     (called by hooks: reads the hook JSON on stdin, prints nothing)
 extras
   demo                              create a demo session (reference reel, bundled example design) and validate it
-  sfx                               render the 50-sound SFX library → ${MG_DIRNAME}/assets/sfx-library/
+  sfx                               render the 50-sound synth SFX library → ${MG_DIRNAME}/assets/sfx-library/
+  sfx kits | sfx --kit <name>       list the sound kits (calm|crisp|minimal|launch) | audition one → assets/sfx-library/kit-<name>.wav
   font add <file> "<Family>" <weight>   add a custom font to ${MG_DIRNAME}/assets/fonts/ + exact metrics
 `;
 
@@ -75,6 +85,7 @@ process.exit(r.status ?? 1);
 `;
 const GITIGNORE = `# managed by the motion-graphics plugin
 .engine/
+.state/
 sessions/*/build/
 assets/sfx-library/
 # videos are large: remove the next line if you want to commit them
@@ -93,15 +104,19 @@ Managed by the **motion-graphics** plugin. Everything the plugin creates for thi
 | \`sessions/<id>/CHOREOGRAPHY.md\` | how it flows (scenes, templates, timing, emphasis) | per video |
 | \`sessions/<id>/build/\` | spec, validation report, audio mix, contact sheets, QA (regenerable) | scratch |
 | \`sessions/<id>/output/\` | final MP4s, thumbnail, POST.md (caption + files + QA) | deliverables |
+| \`sessions/<id>/usage.json\` | LLM tokens spent on this video (by model, client, chat) + \`usage.log.jsonl\` per turn | per video |
+| \`usage/\` | tokens spent on motion-graphics work not tied to one video (e.g. DESIGN.md setup) | log |
 | \`inbox/\` | drop CONTENT.md files here for unattended batch runs | queue |
 | \`mg.mjs\` | CLI launcher: \`node .motion-graphics/mg.mjs help\` | managed |
 | \`.engine/\` | render engine + node_modules (git-ignored, reinstallable) | managed |
+| \`.state/\` | hook bookkeeping (transcript offsets, last session) | managed |
 `;
 
 function cmdInit() {
   for (const d of [p.mg, p.assets, join(p.assets, 'fonts'), join(p.assets, 'audio'), join(p.assets, 'sfx'), p.sessions, p.inbox]) mkdirSync(d, { recursive: true });
   writeFileSync(p.launcher, LAUNCHER);
   if (!existsSync(join(p.mg, '.gitignore'))) writeFileSync(join(p.mg, '.gitignore'), GITIGNORE);
+  else if (!/^\.state\/$/m.test(readFileSync(join(p.mg, '.gitignore'), 'utf8'))) writeFileSync(join(p.mg, '.gitignore'), readFileSync(join(p.mg, '.gitignore'), 'utf8').replace(/\n?$/, '\n.state/\n'));
   writeFileSync(join(p.mg, 'README.md'), README);
   const cfg = readConfig(p);
   writeFileSync(p.config, JSON.stringify({
@@ -161,6 +176,7 @@ function cmdSessionNew(title, { example = false } = {}) {
     chat: { client: opts.client || null, ref: opts['chat-ref'] || null },
     design: example && !existsSync(p.design) ? 'example' : null, formats: [], outputs: [],
   }, `created${opts.from ? ` from ${opts.from}` : example ? ' (demo)' : ' from templates'}`);
+  touchSession(p.mg, id);
   console.log(`✔ session ${id}\n  ${rel(p, sp.dir)}/\n    CONTENT.md        ${opts.from ? 'copied' : example ? 'example' : 'template — replace with the real copy'}\n    CHOREOGRAPHY.md   ${opts.from ? 'copied' : example ? 'example' : 'template — replace with the scene plan'}\n    build/  output/`);
   return sp;
 }
@@ -179,7 +195,9 @@ function cmdSessionShow(ref) {
   const s = resolveSession(p, ref);
   const ls = (d) => (existsSync(d) ? readdirSync(d).filter((f) => !statSync(join(d, f)).isDirectory()) : []);
   const { id, title, status, created, updated, chat, formats, outputs, qa, design, history, ...restData } = s.data;
-  console.log(JSON.stringify({ id, title, status, path: rel(p, s.dir), created, updated, chat, formats, outputs, qa, design, ...restData, history, files: { inputs: ['CONTENT.md', 'CHOREOGRAPHY.md'].filter((f) => existsSync(join(s.dir, f))), build: ls(s.build), output: ls(s.output) } }, null, 2));
+  let usage;
+  try { const u = JSON.parse(readFileSync(join(s.dir, 'usage.json'), 'utf8')); usage = { total: u.totals.total, input: u.totals.input, output: u.totals.output, cache_read: u.totals.cache_read, cache_write: u.totals.cache_write, turns: u.turns, models: Object.keys(u.by_model) }; } catch {}
+  console.log(JSON.stringify({ id, title, status, path: rel(p, s.dir), created, updated, chat, formats, outputs, qa, design, ...(usage ? { usage } : {}), ...restData, history, files: { inputs: ['CONTENT.md', 'CHOREOGRAPHY.md'].filter((f) => existsSync(join(s.dir, f))), build: ls(s.build), output: ls(s.output) } }, null, 2));
 }
 
 function cmdSessionSet(ref, pairs) {
@@ -294,6 +312,107 @@ function cmdDoctor() {
   if (/onedrive|dropbox|icloud/i.test(p.workspace)) console.log('▲ workspace is inside a synced folder (OneDrive/Dropbox/iCloud): exclude .motion-graphics/.engine from sync, or set MOTION_GRAPHICS_ENGINE_DIR to a folder outside it');
 }
 
+// ───────────────────────────────── sound kits
+async function cmdKits(name) {
+  const K = await import('./lib/kits.mjs');
+  const { wavBuffer } = await import('./lib/dsp.mjs');
+  if (!name) {
+    for (const k of K.KIT_NAMES) {
+      const kit = K.loadKit(k);
+      console.log(`${k.padEnd(8)} ${kit.note.split('.')[0]}.`);
+    }
+    return console.log(`\naudition: node ${MG_DIRNAME}/mg.mjs sfx --kit <name>   ·   use: DESIGN.md audio.sfx.kit: <name>`);
+  }
+  const kit = K.resolveKit({ kit: name });
+  const sr = 48000, gap = Math.round(0.3 * sr), roleGap = Math.round(0.8 * sr);
+  const parts = [];
+  console.log(`| role | sound | takes | align | offset ms | over bed dB |\n|---|---|--:|---|--:|--:|`);
+  for (const [r, role] of Object.entries(kit.roles)) {
+    if (!role) continue;
+    const takes = K.roleTakes(role, sr);
+    console.log(`| ${r} | ${role.sound} | ${takes.length} | ${role.align} | ${role.offset_ms ?? 0} | ${role.bed_db ?? '—'} |`);
+    for (const t of takes) { parts.push(t.channels); parts.push(gap); }
+    parts.push(roleGap);
+  }
+  const n = parts.reduce((a, x) => a + (typeof x === 'number' ? x : x[0].length), 0);
+  const L = new Float32Array(n), R = new Float32Array(n);
+  let o = 0;
+  for (const x of parts) { if (typeof x === 'number') { o += x; continue; } L.set(x[0], o); R.set(x[1], o); o += x[0].length; }
+  const out = join(p.assets, 'sfx-library', `kit-${name}.wav`);
+  mkdirSync(join(p.assets, 'sfx-library'), { recursive: true });
+  writeFileSync(out, wavBuffer([L, R], sr));
+  console.log(`\n✔ ${rel(p, out)}  (every role in order, each take once)`);
+}
+
+// ───────────────────────────────── token usage
+async function cmdUsage(subcmd, args) {
+  const U = await import('./lib/usage.mjs');
+  if (subcmd === 'hook') { U.runHook(args[0], U.readStdinJson()); return process.exit(0); } // silent, never fails the host
+  requireInit();
+  if (subcmd === 'add') {
+    const s = resolveSession(p, args[0]);
+    const n = (k) => Math.max(0, Number(opts[k] || 0));
+    const row = { client: opts.client || 'manual', chat: opts['chat-ref'] || null, model: opts.model || 'unknown', input: n('input'), cache_write: n('cache-write'), cache_read: n('cache-read'), output: n('output'), reasoning: n('reasoning'), requests: 1, source: 'manual', ...(opts.note ? { note: opts.note } : {}) };
+    if (!U.totalOf(row)) die('give at least --input or --output');
+    const sum = U.record(p.mg, s.id, row);
+    return console.log(`✔ ${s.id}: +${U.fmtN(U.totalOf(row))} tokens (session total ${U.fmtN(sum.totals.total)})`);
+  }
+  if (subcmd === 'hooks') return cmdUsageHooks(args[0] === 'install' ? args[1] : args[0]);
+  // report
+  const rows = [];
+  const want = subcmd && subcmd !== 'show' ? subcmd : args[0];
+  const list = want && !opts.all ? [resolveSession(p, want)] : listSessions(p);
+  for (const s of list) if (existsSync(join(s.dir, 'usage.log.jsonl'))) rows.push([s.id, U.summarise(p.mg, s.id)]);
+  if ((!want || opts.all) && existsSync(join(p.mg, 'usage', 'workspace.log.jsonl'))) rows.push(['(workspace: design & setup)', U.summarise(p.mg, null)]);
+  if (opts.json) return console.log(JSON.stringify(Object.fromEntries(rows), null, 2));
+  if (!rows.length) return console.log(`no token usage recorded yet.\n  Claude Code: recorded automatically by the plugin hook.  Codex / Cursor: node ${MG_DIRNAME}/mg.mjs usage hooks install codex|cursor\n  Anything else: node ${MG_DIRNAME}/mg.mjs usage add <session> --input N --output N`);
+  console.log(U.usageTable(rows));
+  if (rows.length > 1) {
+    const all = rows.reduce((a, [, s]) => a + s.totals.total, 0);
+    console.log(`\nall: ${U.fmtN(all)} tokens`);
+  }
+}
+
+function cmdUsageHooks(client) {
+  const cmdline = (c) => `node ${MG_DIRNAME}/mg.mjs usage hook ${c}`;
+  const merge = (file, mutate) => {
+    let j = {};
+    if (existsSync(file)) { try { j = JSON.parse(readFileSync(file, 'utf8')); } catch { die(`${rel(p, file)} is not valid JSON — fix it first`); } }
+    const before = JSON.stringify(j);
+    mutate(j);
+    if (JSON.stringify(j) === before) return console.log(`✔ ${rel(p, file)} already has the usage hook`);
+    mkdirSync(join(file, '..'), { recursive: true });
+    writeFileSync(file, JSON.stringify(j, null, 2) + '\n');
+    console.log(`✔ usage hook added to ${rel(p, file)}`);
+  };
+  const has = (arr, c) => JSON.stringify(arr || []).includes(c);
+  if (client === 'codex') {
+    const c = cmdline('codex');
+    merge(join(p.workspace, '.codex', 'hooks.json'), (j) => {
+      j.hooks ||= {};
+      if (!has(j.hooks.Stop, c)) (j.hooks.Stop ||= []).push({ hooks: [{ type: 'command', command: c, timeout: 30 }] });
+    });
+    return console.log('  Codex reads project hooks from .codex/hooks.json (enable hooks in your Codex config if your version requires it); restart Codex.');
+  }
+  if (client === 'cursor') {
+    const c = cmdline('cursor');
+    merge(join(p.workspace, '.cursor', 'hooks.json'), (j) => {
+      j.version ||= 1; j.hooks ||= {};
+      if (!has(j.hooks.afterAgentResponse, c)) (j.hooks.afterAgentResponse ||= []).push({ command: c });
+    });
+    return console.log('  Cursor: Developer: Reload Window. Counts are best effort (Cursor does not document its token fields).');
+  }
+  if (client === 'claude') {
+    const c = cmdline('claude-code');
+    merge(join(p.workspace, '.claude', 'settings.json'), (j) => {
+      j.hooks ||= {};
+      for (const ev of ['Stop', 'SessionEnd']) if (!has(j.hooks[ev], c)) (j.hooks[ev] ||= []).push({ hooks: [{ type: 'command', command: c, timeout: 30 }] });
+    });
+    return console.log('  Only needed when the portable agent-plugin is loaded into Claude Code: the Claude plugin already records usage on its own.');
+  }
+  die('usage hooks install codex|cursor|claude');
+}
+
 async function main() {
   switch (cmd) {
     case undefined: case 'help': case '--help': return console.log(HELP);
@@ -319,9 +438,11 @@ async function main() {
     case 'qa': { const r = await pipeline('qaSession', sub); return process.exit(r.verdict === 'FAIL' ? 1 : 0); }
     case 'make': return cmdMake(sub);
     case 'demo': return cmdDemo();
+    case 'usage': return cmdUsage(sub, rest);
     case 'font': if (sub === 'add') return cmdFontAdd(...rest); return die('font add <file> "<Family>" <weight>');
     case 'sfx': {
       requireInit();
+      if (sub === 'kits' || opts.kit) return cmdKits(opts.kit);
       const out = join(p.assets, 'sfx-library');
       const r = spawnSync(process.execPath, [join(ENGINE_ROOT, 'scripts', 'sfx-library.mjs'), '--out', out], { stdio: 'inherit' });
       return process.exit(r.status ?? 1);

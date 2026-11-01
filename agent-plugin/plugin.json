@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "motion-graphics",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "Model-agnostic motion-graphics production pipeline for social media: DESIGN.md (static brand motion system) + CHOREOGRAPHY.md + CONTENT.md -> validated spec -> deterministic Remotion render with synthesised, beat-locked audio -> QA'd MP4. Encodes motion-director knowledge as skills so any capable model can produce professional kinetic typography.",
   "author": {
     "name": "Kavish Nanayakkara",

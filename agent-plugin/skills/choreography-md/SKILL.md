@@ -3,7 +3,7 @@ name: choreography-md
 description: Write or validate CHOREOGRAPHY.md, the per-video scene plan for the motion-graphics pipeline (narrative arc, scene order, template per beat, durations, emphasis/accent, transitions, music energy). Use when a user uploads a choreography, asks to storyboard or structure a motion-graphics video, or when one must be derived from CONTENT.md.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
   schema: motion-choreography/1.0
 ---
 
@@ -68,7 +68,7 @@ emphasis: accent_orange       # none|auto|<colour token>
 transition_out: glitch_cut    # glitch_cut|hard_cut|dim_cut|flash_cut
 reveal: { headline: words }   # optional per-slot reveal override: glitch|words|decode|type|count|fade|strike
 timing: { headline: { delay_frames: 6 } }   # optional: hold back a slot (drama)
-sfx: [{ id: riser_noise, at_s: 2.2, gain_db: -4 }]   # optional extra sounds (ids from sound-design)
+sfx: [{ role: riser, at_s: 2.2 }]   # optional extra sounds: a kit role (riser into a hero, bell with note: E5) or { id: <sound>, gain_db }; at_s = when it LANDS
 notes: "Payoff. MINUTES. must land on a beat."
 ```
 
